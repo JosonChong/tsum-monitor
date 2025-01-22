@@ -1,0 +1,7 @@
+node_modules
+logs
+test.ts
+package-lock.json
+*.bat
+.env
+*.txt
