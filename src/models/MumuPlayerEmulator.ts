@@ -11,12 +11,17 @@ export class MumuPlayerEmulator extends Emulator {
 
     installPath: string = 'C:/Program Files/MuMu Player 12';
 
-    constructor(emulatorId: string, deviceNames: string[], installPath?: string) {
+    constructor(emulatorId: string, deviceNames: string[], installPath?: string, startupCommand?: string) {
         super();
         this.emulatorId = emulatorId;
         this.deviceNames = deviceNames;
+
         if (installPath) {
             this.installPath = installPath;
+        }
+
+        if (startupCommand) {
+            this.startupCommand = startupCommand;
         }
     }
     
@@ -38,6 +43,18 @@ export class MumuPlayerEmulator extends Emulator {
         await new Promise(f => setTimeout(f, 1000));
 
         await exec(`"${this.installPath}/shell/MuMuManager.exe" control -v ${this.emulatorId} app launch -pkg com.linecorp.LGTMTM`);
+
+        if (this.startupCommand) {
+            const transformedCommand = this.startupCommand.replace("<installPath>", this.installPath).replace("<emulatorId>", this.emulatorId);
+
+            log(`Going to run startup command on MuMuPlayer ${this.emulatorId} after 60 seconds.`);
+
+            await new Promise(f => setTimeout(f, 60000));
+
+            log(`Running command on MuMuPlayer ${this.emulatorId}: ${transformedCommand}`);
+            
+            await exec(transformedCommand);
+        }
     }
 
     async restartGame() {

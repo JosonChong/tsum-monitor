@@ -18,9 +18,9 @@ let accounts: Account[] = [];
 function createEmulator(emulatorData: any): Emulator {
     switch(emulatorData.type) {
         case "Ld":
-            return new LdPlayerEmulator(emulatorData.emulatorName, emulatorData.deviceNames, emulatorData.installPath);
+            return new LdPlayerEmulator(emulatorData.emulatorName, emulatorData.deviceNames, emulatorData.installPath, emulatorData.startupCommand);
         case "Mumu":
-            return new MumuPlayerEmulator(emulatorData.emulatoreId, emulatorData.deviceNames, emulatorData.installPath);
+            return new MumuPlayerEmulator(emulatorData.emulatoreId, emulatorData.deviceNames, emulatorData.installPath, emulatorData.startupCommand);
         default:
             logError("Unknown emulator type.");
             return null;

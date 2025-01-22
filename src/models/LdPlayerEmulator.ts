@@ -9,12 +9,17 @@ export class LdPlayerEmulator extends Emulator {
 
     installPath: string = 'C:/LDPlayer/LDPlayer64';
 
-    constructor(emulatorName: string, deviceNames: string[], installPath?: string) {
+    constructor(emulatorName: string, deviceNames: string[], installPath?: string, startupCommand?: string) {
         super();
         this.emulatorName = emulatorName;
         this.deviceNames = deviceNames;
+
         if (installPath) {
             this.installPath = installPath;
+        }
+
+        if (startupCommand) {
+            this.startupCommand = startupCommand;
         }
     }
     
@@ -33,9 +38,17 @@ export class LdPlayerEmulator extends Emulator {
 
         await exec(`${this.installPath}/ldconsole.exe runapp --name ${this.emulatorName} --packagename com.linecorp.LGTMTM`);
 
-        await new Promise(f => setTimeout(f, 60000));
+        if (this.startupCommand) {
+            const transformedCommand = this.startupCommand.replace("<installPath>", this.installPath).replace("<emulatorName>", this.emulatorName);
 
-        await exec(`${this.installPath}/ldconsole.exe action --name ${this.emulatorName} --key call.gravity --value -320,200,0`);
+            log(`Going to run startup command on LdPlayer ${this.emulatorName} after 60 seconds.`);
+
+            await new Promise(f => setTimeout(f, 60000));
+
+            log(`Running command on LdPlayer ${this.emulatorName}: ${transformedCommand}`);
+
+            await exec(transformedCommand);
+        }
     }
 
     async restartGame() {
@@ -53,7 +66,7 @@ export class LdPlayerEmulator extends Emulator {
 
         await exec(`${this.installPath}/ldconsole.exe launchex --name ${this.emulatorName} --packagename com.r2studio.robotmon`);
 
-        await new Promise(f => setTimeout(f, 20000));
+        await new Promise(f => setTimeout(f, 24000));
 
         for (let deviceName of this.deviceNames) {
             this.startService(deviceName);

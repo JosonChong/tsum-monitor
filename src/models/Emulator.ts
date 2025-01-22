@@ -4,6 +4,8 @@ export class Emulator {
 
     deviceNames: string[];
 
+    startupCommand: string;
+
     startGameBeginTime?: Date; 
 
     startGameTimeLimit: number = 3;
