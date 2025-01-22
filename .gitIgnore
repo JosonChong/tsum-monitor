@@ -5,3 +5,4 @@ package-lock.json
 *.bat
 .env
 *.txt
+config.json

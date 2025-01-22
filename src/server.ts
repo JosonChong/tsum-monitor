@@ -1,19 +1,39 @@
+import { readFileSync } from 'fs';
 import * as http from 'http';
 import * as url from 'url';
 import { log, logError } from "./utils/logUtils";
 import schedule from 'node-schedule';
 import { Account } from './models/Account.ts';
-import { LdPlayerInstance } from './models/LdPlayerInstance.ts';
-import { MumuPlayerInstance } from './models/MumuPlayerInstance.ts';
-import dotenv from 'dotenv';
 import { Client, GatewayIntentBits, Partials } from 'discord.js';
 import moment from 'moment';
+import { Emulator } from './models/Emulator.ts';
+import { LdPlayerEmulator } from './models/LdPlayerEmulator.ts';
+import { MumuPlayerEmulator } from './models/MumuPlayerEmulator.ts';
 
-dotenv.config();
+const config = readFileSync('./config.json', 'utf-8');
+const configData = JSON.parse(config);
+
+let accounts: Account[] = [];
+
+function createEmulator(emulatorData: any): Emulator {
+    switch(emulatorData.type) {
+        case "Ld":
+            return new LdPlayerEmulator(emulatorData.emulatorName, emulatorData.deviceNames, emulatorData.installPath);
+        case "Mumu":
+            return new MumuPlayerEmulator(emulatorData.emulatoreId, emulatorData.deviceNames, emulatorData.installPath);
+        default:
+            logError("Unknown emulator type.");
+            return null;
+    }
+}
+
+for (let accountData of configData.accounts) {
+    let emulator = createEmulator(accountData.emulator);
+    let account = new Account(accountData.account, accountData.discordUserId, emulator, accountData.deathThreshold);
+    accounts.push(account);
+}
 
 const port = 3000;
-
-const accounts = [];
 
 //discord server
 const client = new Client({
@@ -36,6 +56,14 @@ client.on('messageCreate', (message) => {
     if (message.author.bot) return;
 
     let messages = message.content.split(" ");
+
+    if (messages[0] === '!accounts') {
+        console.log(accounts);
+    }
+
+    if (messages[0] === '!id') {
+        message.reply(message.author.id);
+    }
 
     if (messages[0] === '!killGame' || messages[0] === '!kg') {
         let account = accounts.find(a => a.accountName === messages[1]);
@@ -64,30 +92,30 @@ client.on('messageCreate', (message) => {
         }
     }
 
-    if (messages[0] === '!killInstance' || messages[0] === '!ki') {
+    if (messages[0] === '!killEmulator' || messages[0] === '!ke') {
         let account = accounts.find(a => a.accountName === messages[1]);
 
         if (account) {
-            log(`Trying to kill instance on ${account.accountName}.`);
-            account.killInstance();
+            log(`Trying to kill emulator on ${account.accountName}.`);
+            account.killEmulator();
         }
     }
 
-    if (messages[0] === '!startInstance'  || messages[0] === '!si') {
+    if (messages[0] === '!startEmulator'  || messages[0] === '!se') {
         let account = accounts.find(a => a.accountName === messages[1]);
 
         if (account) {
-            log(`Trying to start instance on ${account.accountName}.`);
-            account.startInstance();
+            log(`Trying to start emulator on ${account.accountName}.`);
+            account.startEmulator();
         }
     }
 
-    if (messages[0] === '!restartInstance' || messages[0] === '!rsi') {
+    if (messages[0] === '!restartEmulator' || messages[0] === '!rse') {
         let account = accounts.find(a => a.accountName === messages[1]);
 
         if (account) {
-            log(`Trying to restart instance on ${account.accountName}.`);
-            account.restartInstance();
+            log(`Trying to restart emulator on ${account.accountName}.`);
+            account.restartEmulator();
         }
     }
 
@@ -130,19 +158,19 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // start instance success, start game on instance
-    if (account.isStartingInstance()) {
-        account.emulatorInstance.startInstanceBeginTime = null;
+    // start emulator success, start game on emulator
+    if (account.isStartingEmulator()) {
+        account.emulator.startEmulatorBeginTime = null;
 
         account.startGame();
 
-        log(`Started instance for ${account.accountName} successfully, starting Game now...`);
+        log(`Started emulator for ${account.accountName} successfully, starting Game now...`);
     } else {
         let logMessage = `${accountNameReported} reported alive.`;
 
         // start game success
         if (account.isStartingGame()) {
-            account.emulatorInstance.startGameBeginTime = null;
+            account.emulator.startGameBeginTime = null;
 
             logMessage = `Started game for ${account.accountName} successfully`;
         }
@@ -164,13 +192,13 @@ function startScheduleJob() {
     let job = schedule.scheduleJob('*/30 * * * * *', async function() {
         try {
             for (let account of accounts) {
-                if (account.isStartingInstance()) {
-                    if (account.startInstanceFailed()) {
-                        logError(`Failed to start instance for ${account.accountName}, retrying...`);
+                if (account.isStartingEmulator()) {
+                    if (account.startEmulatorFailed()) {
+                        logError(`Failed to start emulator for ${account.accountName}, retrying...`);
 
-                        account.restartInstance();
+                        account.restartEmulator();
                     } else {
-                        log(`Still starting instance for ${account.accountName}.`);
+                        log(`Still starting emulator for ${account.accountName}.`);
                     }
                 } else if (account.isStartingGame()) {
                     if (account.startGameFailed()) {
@@ -181,7 +209,7 @@ function startScheduleJob() {
                         log(`Still starting game for ${account.accountName}.`);
                     }
                 } else if (account.isDead() && !account.notifiedDeath) {
-                    if (account.emulatorInstance) {
+                    if (account.emulator) {
                         const message = `${account.accountName} lost connection, trying to restart game.`;
                         logError(message);
 
@@ -212,12 +240,12 @@ function startScheduleJob() {
 server.listen(port, () => {
     log(`Server running at http://localhost:${port}/`);
 
-    const TOKEN = process.env.DISCORD_TOKEN;
-    if (!TOKEN) {
-        logError('DISCORD_TOKEN not found in .env');
+    const discordServerToken = configData.discordServerToken;
+    if (!discordServerToken) {
+        logError('discordServerToken not found in config.json.');
         process.exit(1);
     }
-    client.login(TOKEN);
+    client.login(discordServerToken);
 
     startScheduleJob();
 });

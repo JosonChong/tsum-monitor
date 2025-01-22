@@ -1,5 +1,5 @@
 import * as dateUtil from '../utils/dateUtils';
-import { EmulatorInstance } from './EmulatorInstance';
+import { Emulator } from './Emulator';
 
 export class Account {
     
@@ -11,19 +11,19 @@ export class Account {
 
     discordUserId?: string;
 
-    deathThreshold: number = 15;
+    deathThreshold: number = 20;
 
-    emulatorInstance?: EmulatorInstance;
+    emulator?: Emulator;
 
-    constructor(accountName: string, discordUserId?: string, emulatorInstance?: EmulatorInstance, deathThreshold?: number) {
+    constructor(accountName: string, discordUserId?: string, emulator?: Emulator, deathThreshold?: number) {
         this.accountName = accountName;
 
         if (discordUserId) {
             this.discordUserId = discordUserId;
         }
 
-        if (emulatorInstance) {
-            this.emulatorInstance = emulatorInstance;
+        if (emulator) {
+            this.emulator = emulator;
         }
 
         if (deathThreshold) {
@@ -45,70 +45,70 @@ export class Account {
     }
 
     isStartingGame(): boolean {
-        return !!(this.emulatorInstance?.startGameBeginTime);
+        return !!(this.emulator?.startGameBeginTime);
     }
 
-    isStartingInstance(): boolean {
-        return !!(this.emulatorInstance?.startInstanceBeginTime);
+    isStartingEmulator(): boolean {
+        return !!(this.emulator?.startEmulatorBeginTime);
     }
 
     startGameFailed(): boolean {
         if (this.isStartingGame()) {
-            return dateUtil.timePastInMinutes(this.emulatorInstance.startGameBeginTime) > this.emulatorInstance.startGameTimeLimit;
+            return dateUtil.timePastInMinutes(this.emulator.startGameBeginTime) > this.emulator.startGameTimeLimit;
         }
         
         return false;
     }
 
-    startInstanceFailed(): boolean {
-        if (this.isStartingInstance) {
-            return dateUtil.timePastInMinutes(this.emulatorInstance.startInstanceBeginTime) > this.emulatorInstance.startInstanceTimeLimit;
+    startEmulatorFailed(): boolean {
+        if (this.isStartingEmulator) {
+            return dateUtil.timePastInMinutes(this.emulator.startEmulatorBeginTime) > this.emulator.startEmulatorTimeLimit;
         }
         
         return false;
     }
 
     async killGame() {
-        if (this.emulatorInstance) {
+        if (this.emulator) {
             this.lastAlive = null;
 
-            this.emulatorInstance.killGame();
+            this.emulator.killGame();
         }
     }
 
     async startGame() {
-        if (this.emulatorInstance) {
-            this.emulatorInstance.startGame();
+        if (this.emulator) {
+            this.emulator.startGame();
         }
     }
 
     async restartGame() {
-        if (this.emulatorInstance) {
+        if (this.emulator) {
             this.lastAlive = null;
 
-            this.emulatorInstance.restartGame();
+            this.emulator.restartGame();
         }
     }
 
-    async killInstance() {
-        if (this.emulatorInstance) {
+    async killEmulator() {
+        if (this.emulator) {
             this.lastAlive = null;
 
-            this.emulatorInstance.killInstance();
+            this.emulator.killEmulator();
         } 
     }
 
-    async startInstance() {
-        if (this.emulatorInstance) {
-            this.emulatorInstance.startInstance();
+    async startEmulator() {
+        if (this.emulator) {
+            this.emulator.startEmulator();
         }
     }
 
-    async restartInstance() {
-        if (this.emulatorInstance) {
+    async restartEmulator() {
+        if (this.emulator) {
             this.lastAlive = null;
 
-            this.emulatorInstance.restartInstance();
+            this.emulator.restartEmulator();
         }
     }
 

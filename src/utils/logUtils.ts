@@ -25,7 +25,6 @@ log4js.configure({
     },
 });
 
-// Create a logger instance
 const logger = log4js.getLogger();
 
 // Export log functions
