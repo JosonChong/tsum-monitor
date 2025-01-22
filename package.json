@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "ts-node ./src/server.ts"
+    "start": "ts-node ./src/server.ts",
+    "prestart": "npm install"
   },
   "keywords": [],
   "author": "",

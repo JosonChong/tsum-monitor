@@ -3,6 +3,7 @@ logs
 test.ts
 package-lock.json
 *.bat
+!start.bat
 .env
 *.txt
 config.json
