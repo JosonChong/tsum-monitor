@@ -1,4 +1,4 @@
-<h3>Create discord server</h3>
+<h3>Create discord bot</h3>
 https://discord.com/login?redirect_to=%2Fdevelopers%2Fapplications
 
 

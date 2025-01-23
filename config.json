@@ -9,7 +9,8 @@
                 "type": "Ld",
                 "emulatorName": "<emulator name here>",
                 "deviceNames": ["127.0.0.1:5555", "emulator-5554"],
-                "installPath": "C:/LDPlayer/LDPlayer64"
+                "installPath": "C:/LDPlayer/LDPlayer64",
+                "startupCommand": "<installPath>/ldconsole.exe action --name <emulatorName> --key call.gravity --value -160,200,0"
             }
         },
         {
