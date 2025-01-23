@@ -1,7 +1,10 @@
 import { log, logError } from '../utils/logUtils';
 import { Emulator } from './Emulator';
+import path from 'path';
 import util from 'util';
 const exec = util.promisify(require('child_process').exec);
+
+const resourcesDir = path.resolve(__dirname, '../../resources');
 
 export class LdPlayerEmulator extends Emulator {
 
@@ -89,6 +92,14 @@ export class LdPlayerEmulator extends Emulator {
         await new Promise(f => setTimeout(f, 5000));
 
         await this.startEmulator();
+    }
+
+    async minimizeEmulator() {
+        await exec(`${resourcesDir}/windowMode -title "${this.emulatorName}" -mode minimized`);
+    }
+
+    async restoreEmulator() {
+        await exec(`${resourcesDir}/windowMode -title "${this.emulatorName}" -mode normal`);
     }
 
 }

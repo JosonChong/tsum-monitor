@@ -112,4 +112,16 @@ export class Account {
         }
     }
 
+    async minimizeEmulator() {
+        if (this.emulator) {
+            this.emulator.minimizeEmulator();
+        }
+    }
+
+    async restoreEmulator() {
+        if (this.emulator) {
+            this.emulator.restoreEmulator();
+        }
+    }
+
 }

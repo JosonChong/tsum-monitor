@@ -1,20 +1,29 @@
 import { log, logError } from '../utils/logUtils';
 import { Emulator } from './Emulator';
+import path from 'path';
 import util from 'util';
 const exec = util.promisify(require('child_process').exec);
+
+const resourcesDir = path.resolve(__dirname, '../../resources');
 
 export class MumuPlayerEmulator extends Emulator {
 
     emulatorId: string;
+
+    emulatorName?: string;
     
     deviceNames: string[];
 
     installPath: string = 'C:/Program Files/MuMu Player 12';
 
-    constructor(emulatorId: string, deviceNames: string[], installPath?: string, startupCommand?: string) {
+    constructor(emulatorId: string, deviceNames: string[], emulatorName?: string, installPath?: string, startupCommand?: string) {
         super();
         this.emulatorId = emulatorId;
         this.deviceNames = deviceNames;
+
+        if (emulatorName) {
+            this.emulatorName = emulatorName;
+        }
 
         if (installPath) {
             this.installPath = installPath;
@@ -93,6 +102,26 @@ export class MumuPlayerEmulator extends Emulator {
         await new Promise(f => setTimeout(f, 5000));
 
         await this.startEmulator();
+    }
+
+    async minimizeEmulator() {
+        if (!this.emulatorName) {
+            logError("Need emualtor name to minimize emulator.");
+
+            return;
+        }
+
+        await exec(`${resourcesDir}/windowMode -title "${this.emulatorName}" -mode minimized`);
+    }
+
+    async restoreEmulator() {
+        if (!this.emulatorName) {
+            logError("Need emualtor name to restore emulator.");
+
+            return;
+        }
+
+        await exec(`${resourcesDir}/windowMode -title "${this.emulatorName}" -mode normal`);
     }
 
 }

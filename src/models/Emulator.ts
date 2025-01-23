@@ -1,3 +1,5 @@
+import { logError } from "../utils/logUtils";
+
 export class Emulator {
 
     accountName: string;
@@ -25,5 +27,13 @@ export class Emulator {
     async startEmulator() {}
 
     async restartEmulator() {}
+
+    async minimizeEmulator() {
+        logError("This emulator doesn't support minimizing.");
+    }
+
+    async restoreEmulator() {
+        logError("This emulator doesn't support showing.");
+    }
 
 }

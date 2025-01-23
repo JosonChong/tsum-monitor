@@ -4,6 +4,8 @@ test.ts
 package-lock.json
 *.bat
 !start.bat
+!windowMode.bat
 .env
 *.txt
 config.json
+*.exe

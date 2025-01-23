@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { readFileSync } from 'fs';
 import * as http from 'http';
 import * as url from 'url';
@@ -20,7 +22,7 @@ function createEmulator(emulatorData: any): Emulator {
         case "Ld":
             return new LdPlayerEmulator(emulatorData.emulatorName, emulatorData.deviceNames, emulatorData.installPath, emulatorData.startupCommand);
         case "Mumu":
-            return new MumuPlayerEmulator(emulatorData.emulatoreId, emulatorData.deviceNames, emulatorData.installPath, emulatorData.startupCommand);
+            return new MumuPlayerEmulator(emulatorData.emulatoreId, emulatorData.deviceNames, emulatorData.emulatorName, emulatorData.installPath, emulatorData.startupCommand);
         default:
             logError("Unknown emulator type.");
             return null;
@@ -59,6 +61,8 @@ client.on('messageCreate', (message) => {
 
     if (messages[0] === '!accounts') {
         console.log(accounts);
+
+        message.reply('```' + JSON.stringify(accounts, null, 2) + '```');
     }
 
     if (messages[0] === '!id') {
@@ -119,6 +123,43 @@ client.on('messageCreate', (message) => {
         }
     }
 
+    if (messages[0] === '!minimizeEmulator' || messages[0] === '!me') {
+        if (messages[1] === "all") {
+            log(`Trying to minimize all emulators.`);
+
+            for (let account of accounts) {
+                account.minimizeEmulator();
+            }
+
+            return;
+        }
+
+        let account = accounts.find(a => a.accountName === messages[1]);
+
+        if (account) {
+            log(`Trying to minimize emulator on ${account.accountName}.`);
+            account.minimizeEmulator();
+        }
+    }
+
+    if (messages[0] === '!restoreEmulator' || messages[0] === '!ne') {
+        if (messages[1] === "all") {
+            log(`Trying to restore all emulators.`);
+
+            for (let account of accounts) {
+                account.restoreEmulator();
+            }
+
+            return;
+        }
+
+        let account = accounts.find(a => a.accountName === messages[1]);
+
+        if (account) {
+            log(`Trying to restore emulator on ${account.accountName}.`);
+            account.restoreEmulator();
+        }
+    }
 });
 
 // http server
