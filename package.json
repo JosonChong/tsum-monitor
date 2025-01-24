@@ -11,8 +11,8 @@
   ],
   "scripts": {
     "start": "ts-node ./src/server.ts",
-    "buildjs": "npx tsc -p . --outDir ./build && cp ./build/src/utils/logUtilsPkg.js ./build/src/utils/logUtils.js && rm ./build/src/utils/logUtilsPkg.js && cp -r ./assets/ ./build/assets/",
-    "pkg": "pkg -t node18-win-x64 . --output dist/server.exe"
+    "build": "npx tsc -p . --outDir ./build && cp ./build/src/utils/logUtilsPkg.js ./build/src/utils/logUtils.js && rm ./build/src/utils/logUtilsPkg.js && cp -r ./assets/ ./build/assets/",
+    "postbuild": "pkg -t node18-win-x64 . --output dist/server.exe"
   },
   "keywords": [],
   "author": "",
@@ -45,7 +45,8 @@
       "node_modules/file-type/**",
       "node_modules/fs/**",
       "assets/**",
-      "build/assets/**"
+      "build/assets/**",
+      "public/**"
     ]
   }
 }
