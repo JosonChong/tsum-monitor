@@ -1,9 +1,7 @@
-#!/usr/bin/env node
-
 import { readFileSync } from 'fs';
 import * as http from 'http';
 import * as url from 'url';
-import { log, logError } from "./utils/logUtils";
+import { inMemoryLogs, log, logError } from "./utils/logUtils";
 import schedule from 'node-schedule';
 import { Account } from './models/Account';
 import { Client, GatewayIntentBits, Partials } from 'discord.js';
@@ -11,9 +9,12 @@ import moment = require('moment');
 import { Emulator } from './models/Emulator';
 import { LdPlayerEmulator } from './models/LdPlayerEmulator';
 import { MumuPlayerEmulator } from './models/MumuPlayerEmulator';
+import express from 'express';
+import cors from 'cors';
 
-const config = readFileSync('./config.json', 'utf-8');
-const configData = JSON.parse(config);
+const config = JSON.parse(readFileSync('./config.json', 'utf-8'));
+const serverPort = config.serverPort ? config.serverPort : 3000;
+const uiPort = config.uiPort ? config.uiPort : 4000;
 
 let accounts: Account[] = [];
 
@@ -29,13 +30,11 @@ function createEmulator(emulatorData: any): Emulator | undefined {
     }
 }
 
-for (let accountData of configData.accounts) {
+for (let accountData of config.accounts) {
     let emulator = createEmulator(accountData.emulator);
     let account = new Account(accountData.account, accountData.discordUserId, emulator, accountData.deathThreshold);
     accounts.push(account);
 }
-
-const port = 3000;
 
 //discord server
 const client = new Client({
@@ -268,15 +267,38 @@ function startScheduleJob() {
     return job;
 }
 
-server.listen(port, () => {
-    log(`Server running at http://localhost:${port}/`);
+// Express server for UI
+const app = express();
+app.use(cors());
+app.use(express.static('public'));
 
-    const discordBotToken = configData.discordBotToken;
+app.get('/logs', (_, res) => {
+    res.json(inMemoryLogs);
+});
+
+app.get('/accounts', (_, res) => {
+    res.json(
+        accounts.map(account => ({
+            name: account.accountName,
+            emulator: account.emulator?.emulatorName || "None",
+            status: account.isDead() ? "Offline" : "Online",
+            lastAlive: account.lastAlive,
+        }))
+    );
+});
+
+// Start the servers
+server.listen(serverPort, () => {
+    log(`Server running at http://localhost:${serverPort}/`);
+    const discordBotToken = config.discordBotToken;
     if (!discordBotToken) {
-        logError('discordServerToken not found in config.json.');
+        log('Discord bot token not found in config.json.');
         process.exit(1);
     }
     client.login(discordBotToken);
-
     startScheduleJob();
+});
+
+app.listen(uiPort, () => {
+    log(`UI running at http://localhost:${uiPort}/`);
 });

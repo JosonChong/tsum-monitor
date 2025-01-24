@@ -1,7 +1,10 @@
 import log4js from 'log4js';
 import path from 'path';
+import moment from 'moment';
 
 const logDir = path.resolve(__dirname, '../../logs');
+
+export let inMemoryLogs: {}[] = [];
 
 log4js.configure({
     appenders: {
@@ -30,8 +33,23 @@ const logger = log4js.getLogger();
 // Export log functions
 export function log(message: string) {
     logger.info(message);
+    addInMemoryLog(message, "info");
 }
 
 export function logError(message: string) {
     logger.error(message);
+    addInMemoryLog(message, "error");
+}
+
+function addInMemoryLog(message: string, level: string) {
+    let now = new Date().getTime();
+    inMemoryLogs.push({
+        "timestamp": moment(now).format('DD/MM HH:mm:ss'),
+        "message": message,
+        "level": level
+    });
+
+    if (inMemoryLogs.length > 1000) {
+        inMemoryLogs.shift();
+    }
 }

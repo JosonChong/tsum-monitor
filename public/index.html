@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Dashboard</title>
+    <!-- Bootstrap CSS -->
+    <link 
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" 
+        rel="stylesheet" 
+        integrity="sha384-GnrkY8A3hZ8LXDN0G1qA2rbY4bML5HQrqwZuyj1Bc8JfJ1L5jJlRnldJ0H7y" 
+        crossorigin="anonymous">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link 
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" 
+        rel="stylesheet">
+    <style>
+        /* Global Dark Theme */
+        body {
+            background-color: #121212; /* Dark background */
+            color: #e0e0e0; /* Light text for readability */
+            font-family: 'Roboto', sans-serif; /* Applied Google font */
+        }
+        .container {
+            padding-left: 1rem;  /* Reduced left padding */
+            padding-right: 1rem; /* Reduced right padding */
+        }
+        h1, h2 {
+            font-weight: 700; /* Bold headers */
+            color: #ffffff;   /* Brighter white for emphasis */
+        }
+        .card {
+            background-color: #1e1e1e; /* Darker card background */
+            border: 1px solid #333; /* Subtle border for cards */
+        }
+        .card-header {
+            background-color: #212121; /* Slightly lighter for contrast */
+            color: #e0e0e0;
+            font-weight: bold;
+        }
+        .table-dark {
+            background-color: #212121; /* Dark table header */
+            color: #e0e0e0; /* Light text in table headers */
+        }
+        .table-hover tbody tr:hover {
+            background-color: #333; /* Highlight rows on hover */
+        }
+        .logs-container {
+            height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap; /* Prevent horizontal scrolling */
+            word-wrap: break-word;
+            background-color: #2b2b2b; /* Slightly lighter than page background */
+            color: #e0e0e0; /* Light text for contrast */
+            border: 1px solid #444;
+            padding: 15px; /* Increased padding for better readability */
+            border-radius: 5px;
+        }
+        .badge {
+            font-size: 0.9rem;
+        }
+        .icon-status {
+            font-size: 1.2rem;
+        }
+        a {
+            color: #0d6efd;
+            text-decoration: none;
+        }
+        a:hover {
+            color: #0056b3;
+            text-decoration: underline;
+        }
+
+        /* Timestamp Color by Log Level */
+        .timestamp-info {
+            color: #00ff00; /* Green for info */
+        }
+        .timestamp-warning {
+            color: #ffcc00; /* Yellow for warning */
+        }
+        .timestamp-error {
+            color: #ff3300; /* Red for error */
+        }
+
+        /* Button Styling */
+        #autoScrollButton {
+            margin-top: 10px;
+            background-color: #444;
+            color: #e0e0e0;
+        }
+        #autoScrollButton.active {
+            background-color: #008C00; /* Green when active */
+        }
+    </style>
+</head>
+<body>
+    <div class="container my-5">
+        <h1 class="text-center mb-4">Server Dashboard</h1>
+        
+        <!-- Accounts Section -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2 class="h5 mb-0">Accounts</h2>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Name</th>
+                                <th>Emulator</th>
+                                <th>Status</th>
+                                <th>Last Alive</th>
+                            </tr>
+                        </thead>
+                        <tbody id="accounts">
+                            <tr>
+                                <td colspan="4" class="text-center">Loading accounts...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs Section -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="h5 mb-0">Logs</h2>
+            </div>
+            <div class="card-body logs-container" id="logs">
+                <p>Loading logs...</p>
+            </div>
+            <button id="autoScrollButton" class="btn btn-sm btn-dark w-100">Enable Auto-Scroll</button>
+        </div>
+    </div>
+
+    <script 
+        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" 
+        integrity="sha384-lTDFpprkuy7vQdS3gN0EG7eEXNEMCcSpfB5jCgi6Sezv8U0O4xnpssZSjuG8lgkZ" 
+        crossorigin="anonymous"></script>
+    <script>
+        let isAutoScrollEnabled = true;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Enable Bootstrap tooltips
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+            tooltipTriggerList.forEach(tooltipEl => new bootstrap.Tooltip(tooltipEl));
+        });
+
+        // Fetch logs from the server and update the UI
+        async function fetchLogs() {
+            const logs = await fetch('/logs').then(res => res.json());
+            const logsContainer = document.getElementById('logs');
+            
+            logsContainer.innerHTML = logs.map(log => {
+                // Determine the timestamp color class based on the log level
+                let timestampClass = '';
+                switch(log.level) {
+                    case 'info':
+                        timestampClass = 'timestamp-info';
+                        break;
+                    case 'warning':
+                        timestampClass = 'timestamp-warning';
+                        break;
+                    case 'error':
+                        timestampClass = 'timestamp-error';
+                        break;
+                }
+
+                return `<p><span class="${timestampClass}">${log.timestamp}</span> ${log.message}</p>`;
+            }).join('');
+
+            if (isAutoScrollEnabled) {
+                // Auto-scroll to the bottom
+                logsContainer.scrollTop = logsContainer.scrollHeight;
+            }
+        }
+
+        // Fetch account details and update the UI
+        async function fetchAccounts() {
+            const accounts = await fetch('/accounts').then(res => res.json());
+            const tbody = document.getElementById('accounts');
+            tbody.innerHTML = accounts.map(account => `
+                <tr>
+                    <td>${account.name}</td>
+                    <td>
+                        <span class="badge bg-primary" title="${account.emulator}">
+                            ${account.emulator}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="icon-status" title="${account.status}">
+                            ${
+                                account.status === 'Online' 
+                                ? '<i class="text-success bi bi-check-circle"></i>'
+                                : '<i class="text-danger bi bi-x-circle"></i>'
+                            }
+                            ${account.status}
+                        </span>
+                    </td>
+                    <td>${new Date(account.lastAlive).toLocaleString()}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Toggle auto-scroll
+        document.getElementById('autoScrollButton').addEventListener('click', () => {
+            isAutoScrollEnabled = !isAutoScrollEnabled;
+            const button = document.getElementById('autoScrollButton');
+
+            if (isAutoScrollEnabled) {
+                button.classList.add('active');
+                button.textContent = 'Disable Auto-Scroll';
+            } else {
+                button.classList.remove('active');
+                button.textContent = 'Enable Auto-Scroll';
+            }
+        });
+
+        // Refresh logs and accounts every 3 seconds
+        setInterval(() => {
+            fetchLogs();
+            fetchAccounts();
+        }, 3000);
+
+        // Initial fetch
+        fetchLogs();
+        fetchAccounts();
+    </script>
+</body>
+</html>
