@@ -51,17 +51,34 @@
         .logs-container {
             height: 300px;
             overflow-y: auto;
-            white-space: pre-wrap; /* Ensures wrapping of long text */
-            word-wrap: break-word; /* Breaks long words that do not fit */
             background-color: #2b2b2b;
             color: #e0e0e0;
             border: 1px solid #444;
             padding: 10px;
             border-radius: 5px;
-            gap: 5px;
+            font-family: 'Consolas', monospace;  /* Better font for logs */
         }
+        
         .logs-container p {
-            line-height: 0.5; /* Tighter line spacing */
+            margin: 0;          /* Remove default margins */
+            padding: 2px 0;     /* Add some vertical padding */
+            line-height: 1.4;   /* Improved line height */
+            white-space: pre-wrap; /* Preserve whitespace but allow wrapping */
+            word-break: break-word; /* Break long words if needed */
+            display: flex;      /* Use flexbox for timestamp and message */
+            gap: 8px;          /* Space between timestamp and message */
+        }
+        
+        .logs-container p span {
+            display: inline-block; /* Keep timestamp and message together */
+        }
+        
+        /* Timestamp styles */
+        .timestamp-info,
+        .timestamp-warning,
+        .timestamp-error {
+            flex-shrink: 0;    /* Prevent timestamp from shrinking */
+            min-width: 120px;  /* Adjust based on your timestamp width */
         }
         .badge {
             font-size: 0.9rem;
@@ -112,21 +129,493 @@
         #autoScrollButton:hover {
             background-color: #555;
         }
+        /* Account table styles */
+        .table {
+            margin-bottom: 0;
+            color: #e0e0e0;
+        }
+
+        .table > :not(caption) > * > * {
+            padding: 0.75rem;
+        }
+
+        .table-dark {
+            --bs-table-bg: #1e1e1e;
+            --bs-table-striped-bg: #252525;
+            --bs-table-hover-bg: #2a2a2a;
+        }
+
+        .dropdown-menu {
+            background-color: #2b2b2b;
+            border: 1px solid #444;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.5);
+        }
+
+        .dropdown-item {
+            color: #e0e0e0;
+        }
+
+        .dropdown-item:hover {
+            background-color: #3a3a3a;
+            color: #ffffff;
+        }
+
+        .dropdown-divider {
+            border-top: 1px solid #444;
+        }
+
+        .status-badge {
+            display: inline-block;
+            margin-bottom: 0.2rem;
+            white-space: nowrap;
+            width: auto;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+        }
+
+        .status-online {
+            background-color: rgba(25, 135, 84, 0.2);
+            color: #198754;
+        }
+
+        .status-offline {
+            background-color: rgba(220, 53, 69, 0.2);
+            color: #dc3545;
+        }
+
+        .card-header {
+            background-color: #252525;
+            border-bottom: 1px solid #444;
+        }
+
+        .card-header h5 {
+            color: #ffffff;
+            margin: 0;
+        }
+
+        /* Button styles */
+        .btn-outline-danger {
+            --bs-btn-color: #dc3545;
+            --bs-btn-border-color: #dc3545;
+            --bs-btn-hover-color: #fff;
+            --bs-btn-hover-bg: #dc3545;
+            --bs-btn-hover-border-color: #dc3545;
+            --bs-btn-active-color: #fff;
+            --bs-btn-active-bg: #dc3545;
+            --bs-btn-active-border-color: #dc3545;
+        }
+
+        .btn-outline-success {
+            --bs-btn-color: #198754;
+            --bs-btn-border-color: #198754;
+            --bs-btn-hover-color: #fff;
+            --bs-btn-hover-bg: #198754;
+            --bs-btn-hover-border-color: #198754;
+            --bs-btn-active-color: #fff;
+            --bs-btn-active-bg: #198754;
+            --bs-btn-active-border-color: #198754;
+        }
+
+        .btn-outline-warning {
+            --bs-btn-color: #ffc107;
+            --bs-btn-border-color: #ffc107;
+            --bs-btn-hover-color: #000;
+            --bs-btn-hover-bg: #ffc107;
+            --bs-btn-hover-border-color: #ffc107;
+            --bs-btn-active-color: #000;
+            --bs-btn-active-bg: #ffc107;
+            --bs-btn-active-border-color: #ffc107;
+        }
+
+        .btn-outline-secondary {
+            --bs-btn-color: #6c757d;
+            --bs-btn-border-color: #6c757d;
+            --bs-btn-hover-color: #fff;
+            --bs-btn-hover-bg: #6c757d;
+            --bs-btn-hover-border-color: #6c757d;
+            --bs-btn-active-color: #fff;
+            --bs-btn-active-bg: #6c757d;
+            --bs-btn-active-border-color: #6c757d;
+        }
+
+        /* Adjust table column widths */
+        .table thead th:last-child {
+            width: 300px; /* Adjust based on your needs */
+        }
+
+        .btn-group-vertical .btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+            text-align: left;
+            white-space: nowrap;
+            min-width: 140px;
+        }
+
+        /* Add hover effect */
+        .btn-group-vertical .btn:hover {
+            transform: scale(1.02);
+            transition: transform 0.1s ease-in-out;
+        }
+
+        /* Add gap between button columns */
+        .d-flex.gap-2 {
+            gap: 0.5rem !important;
+        }
+
+        /* Action buttons table styles */
+        .action-buttons {
+            border-collapse: separate;
+            border-spacing: 4px;
+        }
+
+        .action-buttons button {
+            width: 140px;
+            text-align: left;
+            font-size: 0.875rem;
+            padding: 0.25rem 0.5rem;
+            white-space: nowrap;
+        }
+
+        .action-buttons button:hover {
+            transform: scale(1.02);
+            transition: transform 0.1s ease-in-out;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            /* Hide emulator column on mobile */
+            .table th:nth-child(2),
+            .table td:nth-child(2) {
+                display: none;
+            }
+
+            /* Make the action buttons table more compact */
+            .action-buttons {
+                border-spacing: 2px;
+                width: 100%;
+            }
+
+            .action-buttons button {
+                width: 100px;
+                font-size: 0.7rem;
+                padding: 0.2rem 0.4rem;
+            }
+
+            /* Adjust column widths for mobile */
+            .table thead th:first-child {
+                width: 20%;
+            }
+            .table thead th:nth-child(3) {
+                width: 20%;
+            }
+            .table thead th:nth-child(4) {
+                width: 20%;
+            }
+            .table thead th:last-child {
+                width: 40%;
+            }
+
+            /* Make status badge more compact */
+            .status-badge {
+                padding: 0.15rem 0.3rem;
+                font-size: 0.75rem;
+            }
+        }
+
+        /* Logs toggle button */
+        .card-header .btn-outline-secondary {
+            padding: 0.25rem 0.5rem;
+            color: #e0e0e0;
+            border-color: #666;
+        }
+
+        .card-header .btn-outline-secondary:hover {
+            background-color: #444;
+        }
+
+        /* Rotate icon when logs are expanded */
+        .bi-chevron-down.rotated {
+            transform: rotate(180deg);
+            transition: transform 0.3s ease;
+        }
+
+        /* Mobile styles */
+        @media (max-width: 768px) {
+            .container-fluid {
+                padding-left: 12px !important;
+                padding-right: 12px !important;
+                max-width: 100% !important;
+                overflow-x: hidden;
+            }
+
+            /* Adjust log section */
+            .logs-container {
+                padding: 12px !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                overflow-x: hidden;
+            }
+
+            /* Make log text smaller on mobile */
+            .logs-container p {
+                font-size: 0.8rem;
+                margin-bottom: 4px;
+                white-space: pre-wrap;
+                word-wrap: break-word;
+                padding-right: 16px;  /* Increased right padding */
+            }
+
+            /* Adjust card */
+            .card {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                border-radius: 4px;
+            }
+
+            .card-body {
+                padding: 12px;  /* Increased padding */
+                width: 100% !important;
+            }
+
+            /* Adjust auto-scroll button position */
+            #autoScrollButton {
+                right: 16px;
+                bottom: 16px;
+            }
+
+            /* Ensure table doesn't overflow */
+            .table-responsive {
+                width: 100% !important;
+                max-width: 100% !important;
+                overflow-x: auto;
+            }
+        }
+
+        /* Even smaller screens */
+        @media (max-width: 576px) {
+            .action-buttons-mobile {
+                max-width: 120px; /* Even smaller width for very small screens */
+            }
+            
+            .action-buttons-mobile button {
+                font-size: 0.65rem;
+                padding: 0.3rem 0.4rem;
+            }
+        }
+
+        .action-buttons {
+            border-collapse: separate;
+            border-spacing: 2px;
+        }
+
+        .action-buttons td {
+            vertical-align: top;
+        }
+
+        /* Logs toggle styles */
+        .card-header .btn-outline-secondary {
+            padding: 0.25rem 0.5rem;
+        }
+
+        .bi-chevron-down {
+            transition: transform 0.3s ease;
+        }
+
+        .collapse.show + .card-header .bi-chevron-down,
+        [aria-expanded="true"] .bi-chevron-down {
+            transform: rotate(180deg);
+        }
+
+        /* Desktop view */
+        .action-buttons-mobile {
+            display: none;
+        }
+
+        /* Mobile styles */
+        @media (max-width: 768px) {
+            /* Hide emulator column */
+            .table th:nth-child(2),
+            .table td:nth-child(2) {
+                display: none;
+            }
+
+            /* Switch to mobile buttons */
+            .action-buttons-desktop {
+                display: none !important;
+            }
+            
+            .action-buttons-mobile {
+                display: block !important;
+                width: 100%;
+                padding: 2px;
+            }
+
+            .action-buttons-container {
+                width: 100%;
+                max-width: 100%;
+                overflow: hidden;
+            }
+
+            .action-buttons-mobile button {
+                display: block;
+                width: 100%;
+                min-width: 0;
+                font-size: 0.7rem;
+                padding: 0.35rem 0.5rem;
+                margin-bottom: 3px;
+                text-align: left;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                border-radius: 4px;
+            }
+
+            /* Adjust table layout */
+            .table-responsive {
+                overflow-x: hidden;
+            }
+
+            .table {
+                table-layout: fixed;
+            }
+
+            /* Adjust column widths */
+            .table thead th:first-child {
+                width: 15%;
+            }
+            .table thead th:nth-child(3) {
+                width: 15%;
+            }
+            .table thead th:nth-child(4) {
+                width: 25%;
+            }
+            .table thead th:last-child {
+                width: 45%;
+                max-width: 45%;
+            }
+
+            .table td:last-child {
+                width: 45%;
+                max-width: 45%;
+                padding: 0.5rem;
+            }
+        }
+
+        /* Even smaller screens */
+        @media (max-width: 576px) {
+            .action-buttons-mobile button {
+                font-size: 0.65rem;
+                padding: 0.3rem 0.4rem;
+            }
+
+            /* Further adjust column widths */
+            .table thead th:first-child {
+                width: 15%;
+            }
+            .table thead th:nth-child(3) {
+                width: 15%;
+            }
+            .table thead th:nth-child(4) {
+                width: 20%;
+            }
+            .table thead th:last-child,
+            .table td:last-child {
+                width: 50%;
+                max-width: 50%;
+            }
+        }
+
+        /* Update table header */
+        @media (max-width: 768px) {
+            /* Hide emulator and last alive columns */
+            .table th:nth-child(2),
+            .table td:nth-child(2) {
+                display: none;
+            }
+
+            /* Adjust column widths */
+            .table thead th:first-child {
+                width: 25%;
+            }
+            .table thead th:nth-child(3) {
+                width: 35%;
+            }
+            .table thead th:last-child {
+                width: 40%;
+            }
+
+            .text-muted {
+                font-size: 0.7rem;
+                opacity: 0.8;
+            }
+        }
+
+        .text-muted {
+            font-size: 0.75rem;
+            opacity: 0.8;
+            display: block;
+            line-height: 1;
+            text-align: center;
+        }
+
+        .d-flex.flex-column.align-items-center {
+            gap: 0.2rem;
+        }
+
+        /* Center all table columns except the actions column */
+        .table td:not(:last-child),
+        .table th:not(:last-child) {
+            text-align: center;
+        }
+
+        /* Center the emulator badge */
+        .badge.bg-primary {
+            display: inline-block;
+        }
+
+        /* Center status column content */
+        .d-flex.flex-column.align-items-center {
+            width: 100%;
+            align-items: center !important;
+        }
+
+        .status-badge {
+            display: inline-block;
+            margin-bottom: 0.2rem;
+            white-space: nowrap;
+            width: auto;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            text-align: center;
+        }
+
+        .text-muted {
+            font-size: 0.75rem;
+            opacity: 0.8;
+            display: block;
+            line-height: 1;
+            text-align: center;
+        }
+
+        .d-flex.flex-column.align-items-center {
+            gap: 0.2rem;
+        }
     </style>
 </head>
 <body>
-    <div class="container my-5">
+    <div class="container-fluid px-4 my-5" style="max-width: 100% !important;">
         <!-- Accounts Section -->
-        <div class="card mb-4">
-            <div class="card-body">
+        <div class="card mb-4" style="max-width: 100% !important;">
+            <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead class="table-dark">
+                    <table class="table table-dark table-hover mb-0" style="width: 100% !important;">
+                        <thead>
                             <tr>
                                 <th>Name</th>
                                 <th>Emulator</th>
                                 <th>Status</th>
-                                <th>Last Alive</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody id="accounts">
@@ -139,16 +628,14 @@
             </div>
         </div>
 
-        <br>
-
         <!-- Logs Section -->
         <div class="card">
             <div class="card-body logs-container" id="logs">
                 <p>Loading logs...</p>
+                <button id="autoScrollButton" class="btn btn-sm btn-secondary position-absolute">
+                    <i class="bi bi-arrow-down-circle"></i>
+                </button>
             </div>
-            <button id="autoScrollButton" class="btn btn-sm btn-secondary position-absolute">
-                <i class="bi bi-arrow-down-circle"></i>
-            </button>
         </div>
     </div>
 
@@ -159,6 +646,173 @@
         crossorigin="anonymous"></script>
     <script>
         let isAutoScrollEnabled = true;
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const ws = new WebSocket(`${wsProtocol}//${window.location.host}`);
+        const logsContainer = document.getElementById('logs');
+
+        function getTimeAgo(timestamp) {
+            const now = new Date();
+            const diff = now - new Date(timestamp);
+            const seconds = Math.floor(diff / 1000);
+
+            if (seconds < 60) {
+                if (seconds <= 0) return 'just now';
+                return seconds === 1 ? '1 sec ago' : `${seconds} secs ago`;
+            }
+            
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) {
+                return minutes === 1 ? '1 min ago' : `${minutes} mins ago`;
+            }
+            
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) {
+                return hours === 1 ? '1 hour ago' : `${hours} hours ago`;
+            }
+            
+            const days = Math.floor(hours / 24);
+            return days === 1 ? '1 day ago' : `${days} days ago`;
+        }
+
+        // Update timestamps every second
+        setInterval(() => {
+            document.querySelectorAll('[data-timestamp]').forEach(element => {
+                const timestamp = element.getAttribute('data-timestamp');
+                if (timestamp) {
+                    element.textContent = getTimeAgo(timestamp);
+                }
+            });
+        }, 1000);
+
+        ws.onerror = (error) => {
+            console.error('WebSocket error:', error);
+        };
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            
+            if (data.type === 'logs') {
+                const previousScrollHeight = logsContainer.scrollHeight;
+                
+                // If it's the initial full logs data
+                if (data.data.length > 1) {
+                    logsContainer.innerHTML = data.data.map(formatLogEntry).join('');
+                } else {
+                    // For real-time updates, append the new log
+                    logsContainer.innerHTML += data.data.map(formatLogEntry).join('');
+                }
+
+                if (isAutoScrollEnabled && logsContainer.scrollHeight > previousScrollHeight) {
+                    logsContainer.scrollTop = logsContainer.scrollHeight;
+                }
+            } else if (data.type === 'accounts') {
+                updateAccountsTable(data.data);
+            }
+        };
+
+        function formatLogEntry(log) {
+            let timestampClass = '';
+            switch(log.level) {
+                case 'info':
+                    timestampClass = 'timestamp-info';
+                    break;
+                case 'warning':
+                    timestampClass = 'timestamp-warning';
+                    break;
+                case 'error':
+                    timestampClass = 'timestamp-error';
+                    break;
+            }
+            return `<p><span class="${timestampClass}">${log.timestamp}</span> <span>${log.message}</span></p>`;
+        }
+
+        function updateAccountsTable(accounts) {
+            const tbody = document.getElementById('accounts');
+            if (!tbody) {
+                console.error('Could not find accounts table body element');
+                return;
+            }
+            
+            const html = accounts.map(account => `
+                <tr>
+                    <td class="align-middle">${account.name}</td>
+                    <td class="align-middle">
+                        <span class="badge bg-primary">
+                            ${account.emulator}
+                        </span>
+                    </td>
+                    <td class="align-middle">
+                        <div class="d-flex flex-column align-items-center">
+                            <span class="status-badge ${account.status === 'Online' ? 'status-online' : 'status-offline'}">
+                                <i class="bi ${account.status === 'Online' ? 'bi-check-circle-fill' : 'bi-x-circle-fill'}"></i>
+                                ${account.status}
+                            </span>
+                            <small class="text-muted" data-timestamp="${account.lastAlive}">${getTimeAgo(account.lastAlive)}</small>
+                        </div>
+                    </td>
+                    <td class="align-middle">
+                        <div class="action-buttons-container">
+                            <div class="action-buttons-desktop">
+                                <table class="action-buttons" style="width: 100%;">
+                                    <tbody>
+                                        <tr>
+                                            <td style="width: 50%;">
+                                                <button class="btn btn-sm btn-outline-danger w-100" onclick="performAction('killGame', '${account.name}')">Kill Game</button>
+                                            </td>
+                                            <td style="width: 50%;">
+                                                <button class="btn btn-sm btn-outline-secondary w-100" onclick="performAction('minimizeEmulator', '${account.name}')">Minimize Emulator</button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-warning w-100" onclick="performAction('restartGame', '${account.name}')">Restart Game</button>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-secondary w-100" onclick="performAction('restoreEmulator', '${account.name}')">Restore Emulator</button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-danger w-100" onclick="performAction('killEmulator', '${account.name}')">Kill Emulator</button>
+                                            </td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-warning w-100" onclick="performAction('restartEmulator', '${account.name}')">Restart Emulator</button>
+                                            </td>
+                                            <td></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="action-buttons-mobile">
+                                <button class="btn btn-sm btn-outline-danger w-100 mb-1" onclick="performAction('killGame', '${account.name}')">Kill Game</button>
+                                <button class="btn btn-sm btn-outline-warning w-100 mb-1" onclick="performAction('restartGame', '${account.name}')">Restart Game</button>
+                                <button class="btn btn-sm btn-outline-danger w-100 mb-1" onclick="performAction('killEmulator', '${account.name}')">Kill Emulator</button>
+                                <button class="btn btn-sm btn-outline-warning w-100 mb-1" onclick="performAction('restartEmulator', '${account.name}')">Restart Emulator</button>
+                                <button class="btn btn-sm btn-outline-secondary w-100 mb-1" onclick="performAction('minimizeEmulator', '${account.name}')">Minimize Emulator</button>
+                                <button class="btn btn-sm btn-outline-secondary w-100 mb-1" onclick="performAction('restoreEmulator', '${account.name}')">Restore Emulator</button>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+            
+            tbody.innerHTML = html;
+        }
+
+        // Add this function to handle the actions
+        function performAction(command, accountName) {
+            // Send the command via WebSocket
+            ws.send(JSON.stringify({
+                type: 'command',
+                data: {
+                    command: command,
+                    accountName: accountName
+                }
+            }));
+        }
 
         // Toggle auto-scroll on/off
         document.getElementById('autoScrollButton').addEventListener('click', () => {
@@ -176,71 +830,6 @@
                 icon.classList.add('bi-arrow-down-circle');
             }
         });
-
-        // Fetch logs from the server and update the UI
-        async function fetchLogs() {
-            const logs = await fetch('/logs').then(res => res.json());
-            const logsContainer = document.getElementById('logs');
-            
-            const previousScrollHeight = logsContainer.scrollHeight;
-            logsContainer.innerHTML = logs.map(log => {
-                let timestampClass = '';
-                switch(log.level) {
-                    case 'info':
-                        timestampClass = 'timestamp-info';
-                        break;
-                    case 'warning':
-                        timestampClass = 'timestamp-warning';
-                        break;
-                    case 'error':
-                        timestampClass = 'timestamp-error';
-                        break;
-                }
-
-                return `<p><span class="${timestampClass}">${log.timestamp}</span> ${log.message}</p>`;
-            }).join('');
-
-            if (isAutoScrollEnabled && logsContainer.scrollHeight > previousScrollHeight) {
-                logsContainer.scrollTop = logsContainer.scrollHeight; // Auto-scroll to the bottom
-            }
-        }
-
-        // Fetch account details and update the UI
-        async function fetchAccounts() {
-            const accounts = await fetch('/accounts').then(res => res.json());
-            const tbody = document.getElementById('accounts');
-            tbody.innerHTML = accounts.map(account => `
-                <tr>
-                    <td>${account.name}</td>
-                    <td>
-                        <span class="badge bg-primary" title="${account.emulator}">
-                            ${account.emulator}
-                        </span>
-                    </td>
-                    <td>
-                        <span class="icon-status" title="${account.status}">
-                            ${
-                                account.status === 'Online' 
-                                ? '<i class="text-success bi bi-check-circle"></i>' 
-                                : '<i class="text-danger bi bi-x-circle"></i>'
-                            }
-                            ${account.status}
-                        </span>
-                    </td>
-                    <td>${new Date(account.lastAlive).toLocaleString()}</td>
-                </tr>
-            `).join('');
-        }
-
-        // Refresh logs and accounts every 3 seconds
-        setInterval(() => {
-            fetchLogs();
-            fetchAccounts();
-        }, 3000);
-
-        // Initial fetch
-        fetchLogs();
-        fetchAccounts();
     </script>
 </body>
 </html>

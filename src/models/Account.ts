@@ -133,11 +133,11 @@ export class Account {
     }
 
     async minimizeEmulator() {
-        try {            
+        try {
+            log(`Trying to minimize emulator for ${this.accountName}.`);
+                        
             this.emulator?.minimizeEmulator();
         } catch (error) {
-            log(`Trying to minimize emulator for ${this.accountName}.`);
-
             logError(`Unable to minimize emulator, error: ${error}`);
         }
     }
