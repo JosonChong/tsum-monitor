@@ -9,3 +9,5 @@ package-lock.json
 *.txt
 config.json
 *.exe
+dist
+build

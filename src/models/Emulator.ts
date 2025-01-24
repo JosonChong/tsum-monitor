@@ -1,12 +1,19 @@
 import { logError } from "../utils/logUtils";
+import * as path from 'path';
+import * as util from 'util';
+const exec = util.promisify(require('child_process').exec);
+
+const assetsDir = path.resolve(__dirname, '../../assets');
 
 export class Emulator {
 
-    accountName: string;
+    accountName?: string;
 
-    deviceNames: string[];
+    deviceNames?: string[];
 
-    startupCommand: string;
+    emulatorName?: string;
+
+    startupCommand?: string;
 
     startGameBeginTime?: Date; 
 
@@ -15,25 +22,55 @@ export class Emulator {
     startEmulatorBeginTime?: Date; 
 
     startEmulatorTimeLimit: number = 2;
+
+    getAdbPath(): string {
+        return '';
+    }
+
+    async connectAdb(deviceName: string){
+        try {
+			await exec(`"${this.getAdbPath()}" connect ${deviceName}`);
+        } catch (error) {
+            logError(`Encountered error when starting service: ${error}`);
+        }
+    }
     
     async killGame() {}
 
     async startGame() {}
 
-    async restartGame() {}
-
     async killEmulator() {}
 
     async startEmulator() {}
 
-    async restartEmulator() {}
+    async runStartupCommand() {}
 
     async minimizeEmulator() {
-        logError("This emulator doesn't support minimizing.");
+        if (!this.emulatorName) {
+            logError("Need emualtor name to minimize emulator.");
+
+            return;
+        }
+
+        try {            
+            await exec(`${assetsDir}/windowMode -title "${this.emulatorName}" -mode minimized`);
+        } catch (error) {
+            logError(`Unable to minimize emulator, error: ${error}`);
+        }
     }
 
     async restoreEmulator() {
-        logError("This emulator doesn't support showing.");
+        if (!this.emulatorName) {
+            logError("Need emualtor name to restore emulator.");
+
+            return;
+        }
+        
+        try {            
+            await exec(`${assetsDir}/windowMode -title "${this.emulatorName}" -mode normal`);
+        } catch (error) {
+            logError(`Unable to restore emulator, error: ${error}`);
+        }
     }
 
 }

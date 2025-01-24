@@ -1,4 +1,5 @@
 import * as dateUtil from '../utils/dateUtils';
+import { log, logError } from '../utils/logUtils';
 import { Emulator } from './Emulator';
 
 export class Account {
@@ -7,7 +8,7 @@ export class Account {
     
     lastAlive?: Date;
 
-    notifiedDeath: boolean;
+    notifiedDeath?: boolean;
 
     discordUserId?: string;
 
@@ -37,11 +38,7 @@ export class Account {
     }
 
     isDead(): boolean {
-        if (this.lastAlive) {
-            return dateUtil.timePastInMinutes(this.lastAlive) > this.deathThreshold;
-        }
-        
-        return false;
+        return !!this.lastAlive && dateUtil.timePastInMinutes(this.lastAlive) > this.deathThreshold;
     }
 
     isStartingGame(): boolean {
@@ -54,73 +51,104 @@ export class Account {
 
     startGameFailed(): boolean {
         if (this.isStartingGame()) {
-            return dateUtil.timePastInMinutes(this.emulator.startGameBeginTime) > this.emulator.startGameTimeLimit;
+            return dateUtil.timePastInMinutes(this.emulator!.startGameBeginTime!) > this.emulator!.startGameTimeLimit;
         }
         
         return false;
     }
 
     startEmulatorFailed(): boolean {
-        if (this.isStartingEmulator) {
-            return dateUtil.timePastInMinutes(this.emulator.startEmulatorBeginTime) > this.emulator.startEmulatorTimeLimit;
+        if (this.isStartingEmulator()) {
+            return dateUtil.timePastInMinutes(this.emulator!.startEmulatorBeginTime!) > this.emulator!.startEmulatorTimeLimit;
         }
         
         return false;
     }
 
     async killGame() {
-        if (this.emulator) {
-            this.lastAlive = null;
-
-            this.emulator.killGame();
+        if (!this.emulator) {
+            return;
         }
+
+        this.lastAlive = undefined;
+        log(`Trying to kill game for ${this.accountName}.`);
+
+        this.emulator!.killGame();
     }
 
     async startGame() {
-        if (this.emulator) {
-            this.emulator.startGame();
+        if (!this.emulator) {
+            return;
         }
+
+        log(`Trying to start game for ${this.accountName}.`);
+        this.emulator!.startGame();
     }
 
     async restartGame() {
-        if (this.emulator) {
-            this.lastAlive = null;
+        await this.killGame();
 
-            this.emulator.restartGame();
+        await this.startGame();
+    }
+
+    async runStartupCommand() {
+        if (!this.emulator) {
+            return;
         }
+
+        await new Promise(f => setTimeout(f, 3000));
+
+        log(`Trying to run startup command for ${this.accountName}.`);
+
+        this.emulator!.runStartupCommand();
     }
 
     async killEmulator() {
-        if (this.emulator) {
-            this.lastAlive = null;
+        if (!this.emulator) {
+            return;
+        }
 
-            this.emulator.killEmulator();
-        } 
+        this.lastAlive = undefined;
+
+        log(`Trying to kill emulator for ${this.accountName}.`);
+
+        this.emulator!.killEmulator();
     }
 
     async startEmulator() {
-        if (this.emulator) {
-            this.emulator.startEmulator();
+        if (!this.emulator) {
+            return;
         }
+
+        log(`Trying to start emulator for ${this.accountName}.`);
+        this.emulator!.startEmulator();
     }
 
     async restartEmulator() {
-        if (this.emulator) {
-            this.lastAlive = null;
+        await this.killEmulator();
 
-            this.emulator.restartEmulator();
-        }
+        await new Promise(f => setTimeout(f, 5000));
+
+        await this.startEmulator();
     }
 
     async minimizeEmulator() {
-        if (this.emulator) {
-            this.emulator.minimizeEmulator();
+        try {            
+            this.emulator?.minimizeEmulator();
+        } catch (error) {
+            log(`Trying to minimize emulator for ${this.accountName}.`);
+
+            logError(`Unable to minimize emulator, error: ${error}`);
         }
     }
 
     async restoreEmulator() {
-        if (this.emulator) {
-            this.emulator.restoreEmulator();
+        try {
+            log(`Trying to restore emulator for ${this.accountName}.`);
+
+            this.emulator?.restoreEmulator();
+        } catch (error) {
+            logError(`Unable to restore emulator, error: ${error}`);
         }
     }
 

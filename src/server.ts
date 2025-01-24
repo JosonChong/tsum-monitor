@@ -5,19 +5,19 @@ import * as http from 'http';
 import * as url from 'url';
 import { log, logError } from "./utils/logUtils";
 import schedule from 'node-schedule';
-import { Account } from './models/Account.ts';
+import { Account } from './models/Account';
 import { Client, GatewayIntentBits, Partials } from 'discord.js';
-import moment from 'moment';
-import { Emulator } from './models/Emulator.ts';
-import { LdPlayerEmulator } from './models/LdPlayerEmulator.ts';
-import { MumuPlayerEmulator } from './models/MumuPlayerEmulator.ts';
+import moment = require('moment');
+import { Emulator } from './models/Emulator';
+import { LdPlayerEmulator } from './models/LdPlayerEmulator';
+import { MumuPlayerEmulator } from './models/MumuPlayerEmulator';
 
 const config = readFileSync('./config.json', 'utf-8');
 const configData = JSON.parse(config);
 
 let accounts: Account[] = [];
 
-function createEmulator(emulatorData: any): Emulator {
+function createEmulator(emulatorData: any): Emulator | undefined {
     switch(emulatorData.type) {
         case "Ld":
             return new LdPlayerEmulator(emulatorData.emulatorName, emulatorData.deviceNames, emulatorData.installPath, emulatorData.startupCommand);
@@ -25,7 +25,7 @@ function createEmulator(emulatorData: any): Emulator {
             return new MumuPlayerEmulator(emulatorData.emulatoreId, emulatorData.deviceNames, emulatorData.emulatorName, emulatorData.installPath, emulatorData.startupCommand);
         default:
             logError("Unknown emulator type.");
-            return null;
+            return undefined;
     }
 }
 
@@ -57,11 +57,11 @@ client.once('ready', () => {
 client.on('messageCreate', (message) => {
     if (message.author.bot) return;
 
+    log(`Received command ${message.content} from ${message.author.username}`)
+
     let messages = message.content.split(" ");
 
     if (messages[0] === '!accounts') {
-        console.log(accounts);
-
         message.reply('```' + JSON.stringify(accounts, null, 2) + '```');
     }
 
@@ -73,7 +73,6 @@ client.on('messageCreate', (message) => {
         let account = accounts.find(a => a.accountName === messages[1]);
 
         if (account) {
-            log(`Trying to kill game on ${account.accountName}.`);
             account.killGame();
         }
     }
@@ -82,7 +81,6 @@ client.on('messageCreate', (message) => {
         let account = accounts.find(a => a.accountName === messages[1]);
 
         if (account) {
-            log(`Trying to start game on ${account.accountName}.`);
             account.startGame();
         }
     }
@@ -91,7 +89,6 @@ client.on('messageCreate', (message) => {
         let account = accounts.find(a => a.accountName === messages[1]);
 
         if (account) {
-            log(`Trying to restart game on ${account.accountName}.`);
             account.restartGame();
         }
     }
@@ -100,7 +97,6 @@ client.on('messageCreate', (message) => {
         let account = accounts.find(a => a.accountName === messages[1]);
 
         if (account) {
-            log(`Trying to kill emulator on ${account.accountName}.`);
             account.killEmulator();
         }
     }
@@ -109,7 +105,6 @@ client.on('messageCreate', (message) => {
         let account = accounts.find(a => a.accountName === messages[1]);
 
         if (account) {
-            log(`Trying to start emulator on ${account.accountName}.`);
             account.startEmulator();
         }
     }
@@ -118,15 +113,12 @@ client.on('messageCreate', (message) => {
         let account = accounts.find(a => a.accountName === messages[1]);
 
         if (account) {
-            log(`Trying to restart emulator on ${account.accountName}.`);
             account.restartEmulator();
         }
     }
 
     if (messages[0] === '!minimizeEmulator' || messages[0] === '!me') {
         if (messages[1] === "all") {
-            log(`Trying to minimize all emulators.`);
-
             for (let account of accounts) {
                 account.minimizeEmulator();
             }
@@ -137,15 +129,12 @@ client.on('messageCreate', (message) => {
         let account = accounts.find(a => a.accountName === messages[1]);
 
         if (account) {
-            log(`Trying to minimize emulator on ${account.accountName}.`);
             account.minimizeEmulator();
         }
     }
 
     if (messages[0] === '!restoreEmulator' || messages[0] === '!ne') {
         if (messages[1] === "all") {
-            log(`Trying to restore all emulators.`);
-
             for (let account of accounts) {
                 account.restoreEmulator();
             }
@@ -156,7 +145,6 @@ client.on('messageCreate', (message) => {
         let account = accounts.find(a => a.accountName === messages[1]);
 
         if (account) {
-            log(`Trying to restore emulator on ${account.accountName}.`);
             account.restoreEmulator();
         }
     }
@@ -201,7 +189,7 @@ const server = http.createServer((req, res) => {
 
     // start emulator success, start game on emulator
     if (account.isStartingEmulator()) {
-        account.emulator.startEmulatorBeginTime = null;
+        account.emulator!.startEmulatorBeginTime = undefined;
 
         account.startGame();
 
@@ -211,9 +199,11 @@ const server = http.createServer((req, res) => {
 
         // start game success
         if (account.isStartingGame()) {
-            account.emulator.startGameBeginTime = null;
+            account.emulator!.startGameBeginTime = undefined;
 
-            logMessage = `Started game for ${account.accountName} successfully`;
+            logMessage = `Started game for ${account.accountName} successfully.`;
+
+            account.runStartupCommand();
         }
 
         if (account.isDead()) {
@@ -261,7 +251,7 @@ function startScheduleJob() {
     
                         if (account.discordUserId) {
                             try {
-                                client.users.cache.get(account.discordUserId).send(errorMessage);
+                                client.users.cache.get(account.discordUserId)!.send(errorMessage);
                             } catch (error) {
                                 logError(`Encountered error when notifying discord user ${account.discordUserId}`);
                             }
@@ -281,12 +271,12 @@ function startScheduleJob() {
 server.listen(port, () => {
     log(`Server running at http://localhost:${port}/`);
 
-    const discordServerToken = configData.discordServerToken;
-    if (!discordServerToken) {
+    const discordBotToken = configData.discordBotToken;
+    if (!discordBotToken) {
         logError('discordServerToken not found in config.json.');
         process.exit(1);
     }
-    client.login(discordServerToken);
+    client.login(discordBotToken);
 
     startScheduleJob();
 });

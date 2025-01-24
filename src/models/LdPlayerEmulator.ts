@@ -1,10 +1,7 @@
 import { log, logError } from '../utils/logUtils';
 import { Emulator } from './Emulator';
-import path from 'path';
-import util from 'util';
+import * as util from 'util';
 const exec = util.promisify(require('child_process').exec);
-
-const resourcesDir = path.resolve(__dirname, '../../resources');
 
 export class LdPlayerEmulator extends Emulator {
 
@@ -25,54 +22,78 @@ export class LdPlayerEmulator extends Emulator {
             this.startupCommand = startupCommand;
         }
     }
+
+    getAdbPath(): string {
+        return `${this.installPath}/adb.exe`;
+    }
     
     async killGame() {
-        await exec(`${this.installPath}/ldconsole.exe killapp --name ${this.emulatorName} --packagename com.linecorp.LGTMTM`);
-    }
-
-    async startGame() {
-        this.startGameBeginTime = new Date();
-
-        await new Promise(f => setTimeout(f, 1000));
-
-        await exec(`${this.installPath}/dnconsole.exe action --name ${this.emulatorName} --key call.keyboard --value home`);
-
-        await new Promise(f => setTimeout(f, 1000));
-
-        await exec(`${this.installPath}/ldconsole.exe runapp --name ${this.emulatorName} --packagename com.linecorp.LGTMTM`);
-
-        if (this.startupCommand) {
-            const transformedCommand = this.startupCommand.replace("<installPath>", this.installPath).replace("<emulatorName>", this.emulatorName);
-
-            log(`Going to run startup command on LdPlayer ${this.emulatorName} after 60 seconds.`);
-
-            await new Promise(f => setTimeout(f, 60000));
-
-            log(`Running command on LdPlayer ${this.emulatorName}: ${transformedCommand}`);
-
-            await exec(transformedCommand);
+        try {
+            await exec(`${this.installPath}/ldconsole.exe killapp --name ${this.emulatorName} --packagename com.linecorp.LGTMTM`);
+        } catch (error) {
+            logError(`Unable to kill game, error: ${error}`);
         }
     }
 
-    async restartGame() {
-        await this.killGame();
+    async startGame() {
+        try {
+            this.startGameBeginTime = new Date();
+    
+            await new Promise(f => setTimeout(f, 1000));
+    
+            await exec(`${this.installPath}/dnconsole.exe action --name ${this.emulatorName} --key call.keyboard --value home`);
+    
+            await new Promise(f => setTimeout(f, 1000));
+    
+            await exec(`${this.installPath}/ldconsole.exe runapp --name ${this.emulatorName} --packagename com.linecorp.LGTMTM`);
+        } catch (error) {
+            logError(`Unable to start game, error: ${error}`);
+        }
+    }
 
-        await this.startGame();
+    async runStartupCommand() {
+        if (!this.startupCommand) {
+            return;
+        }
+
+        try {
+            const transformedCommand = this.startupCommand.replace("<installPath>", this.installPath).replace("<emulatorName>", this.emulatorName);
+    
+            log(`Trying to run command on LdPlayer ${this.emulatorName}: ${transformedCommand}`);
+    
+            await exec(transformedCommand);
+        } catch (error) {
+            logError(`Unable to run command, error: ${error}`);
+        }
     }
 
     async killEmulator(){
-        await exec(`${this.installPath}/ldconsole.exe quit --name ${this.emulatorName}`);
+        try {      
+            await exec(`${this.installPath}/ldconsole.exe quit --name ${this.emulatorName}`);
+        } catch (error) {
+            logError(`Unable to kill emulator, error: ${error}`);
+        }
     }
 
     async startEmulator() {
-        this.startEmulatorBeginTime = new Date();
+        if (!this.deviceNames) {
+            logError(`Can't start emulator because of no device names.`);
 
-        await exec(`${this.installPath}/ldconsole.exe launchex --name ${this.emulatorName} --packagename com.r2studio.robotmon`);
+            return;
+        }
 
-        await new Promise(f => setTimeout(f, 24000));
+        try {    
+            this.startEmulatorBeginTime = new Date();
 
-        for (let deviceName of this.deviceNames) {
-            this.startService(deviceName);
+            await exec(`${this.installPath}/ldconsole.exe launchex --name ${this.emulatorName} --packagename com.r2studio.robotmon`);
+
+            await new Promise(f => setTimeout(f, 24000));
+
+            for (let deviceName of this.deviceNames) {
+                this.startService(deviceName);
+            }
+        } catch (error) {
+            logError(`Unable to start emulator, error: ${error}`);
         }
     }
 
@@ -84,22 +105,6 @@ export class LdPlayerEmulator extends Emulator {
         } catch (error) {
             logError(`Encountered error when starting service: ${error}`);
         }
-    }
-
-    async restartEmulator() {
-        await this.killEmulator();
-
-        await new Promise(f => setTimeout(f, 5000));
-
-        await this.startEmulator();
-    }
-
-    async minimizeEmulator() {
-        await exec(`${resourcesDir}/windowMode -title "${this.emulatorName}" -mode minimized`);
-    }
-
-    async restoreEmulator() {
-        await exec(`${resourcesDir}/windowMode -title "${this.emulatorName}" -mode normal`);
     }
 
 }

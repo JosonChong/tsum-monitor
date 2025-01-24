@@ -2,16 +2,25 @@
   "name": "tsum-monitor",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "./src/server.ts",
+  "bin": {
+    "tsum-monitor": "build/src/server.js"
+  },
+  "assets": [
+    "./assets"
+  ],
   "scripts": {
     "start": "ts-node ./src/server.ts",
-    "prestart": "npm install"
+    "buildjs": "npx tsc -p . --outDir ./build && cp ./build/src/utils/logUtilsPkg.js ./build/src/utils/logUtils.js && rm ./build/src/utils/logUtilsPkg.js && cp -r ./assets/ ./build/assets/",
+    "pkg": "pkg -t node18-win-x64 . --output dist/server.exe"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/cli-color": "^2.0.6",
     "@types/node": "^22.10.5",
+    "@types/node-schedule": "^2.1.7",
     "typescript": "^5.7.2"
   },
   "dependencies": {
@@ -26,5 +35,13 @@
     "path": "^0.12.7",
     "ts-node": "^10.9.2",
     "util": "^0.12.5"
+  },
+  "pkg": {
+    "assets": [
+      "node_modules/file-type/**",
+      "node_modules/fs/**",
+      "assets/**",
+      "build/assets/**"
+    ]
   }
 }

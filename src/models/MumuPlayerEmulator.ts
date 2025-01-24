@@ -1,10 +1,7 @@
 import { log, logError } from '../utils/logUtils';
 import { Emulator } from './Emulator';
-import path from 'path';
-import util from 'util';
+import * as util from 'util';
 const exec = util.promisify(require('child_process').exec);
-
-const resourcesDir = path.resolve(__dirname, '../../resources');
 
 export class MumuPlayerEmulator extends Emulator {
 
@@ -12,7 +9,7 @@ export class MumuPlayerEmulator extends Emulator {
 
     emulatorName?: string;
     
-    deviceNames: string[];
+    declare deviceNames: string[];
 
     installPath: string = 'C:/Program Files/MuMu Player 12';
 
@@ -33,58 +30,87 @@ export class MumuPlayerEmulator extends Emulator {
             this.startupCommand = startupCommand;
         }
     }
+
+    getAdbPath(): string {
+        return `${this.installPath}/shell/adb.exe`;
+    }
     
     async killGame() {
         try {
             await exec(`"${this.installPath}/shell/MuMuManager.exe" control -v ${this.emulatorId} app close -pkg com.linecorp.LGTMTM`);
         } catch (error) {
-            logError(`Encountered error when killing game: ${error}`);
+            logError(`Unable to kill game, error: ${error}`);
         }
     }
 
     async startGame() {
-        this.startGameBeginTime = new Date();
-
-        await new Promise(f => setTimeout(f, 1000));
-
-        await exec(`"${this.installPath}/shell/MuMuManager.exe" control -v ${this.emulatorId} tool func -n go_home`);
-
-        await new Promise(f => setTimeout(f, 1000));
-
-        await exec(`"${this.installPath}/shell/MuMuManager.exe" control -v ${this.emulatorId} app launch -pkg com.linecorp.LGTMTM`);
-
-        if (this.startupCommand) {
-            const transformedCommand = this.startupCommand.replace("<installPath>", this.installPath).replace("<emulatorId>", this.emulatorId);
-
-            log(`Going to run startup command on MuMuPlayer ${this.emulatorId} after 60 seconds.`);
-
-            await new Promise(f => setTimeout(f, 60000));
-
-            log(`Running command on MuMuPlayer ${this.emulatorId}: ${transformedCommand}`);
-            
-            await exec(transformedCommand);
+        try {
+            this.startGameBeginTime = new Date();
+    
+            await new Promise(f => setTimeout(f, 1000));
+    
+            await exec(`"${this.installPath}/shell/MuMuManager.exe" control -v ${this.emulatorId} tool func -n go_home`);
+    
+            await new Promise(f => setTimeout(f, 1000));
+    
+            await exec(`"${this.installPath}/shell/MuMuManager.exe" control -v ${this.emulatorId} app launch -pkg com.linecorp.LGTMTM`);
+        } catch (error) {
+            logError(`Unable to start game, error: ${error}`);
         }
     }
 
-    async restartGame() {
-        await this.killGame();
+    async runStartupCommand() {
+        if (!this.startupCommand) {
+            return;
+        }
 
-        await this.startGame();
+        try {
+            const transformedCommand = this.startupCommand
+                    .replace("<installPath>", this.installPath)
+                    .replace("<emulatorId>", this.emulatorId)
+                    .replace("<emulatorName>", this.emulatorName ? this.emulatorName : "");
+
+            log(`Trying to run command on MuMuPlayer ${this.emulatorId}: ${transformedCommand}`);
+    
+            await exec(transformedCommand);
+        } catch (error) {
+            logError(`Unable to run command, error: ${error}`);
+        }
     }
 
     async killEmulator(){
-        await exec(`"${this.installPath}/shell/MuMuManager.exe" control -v ${this.emulatorId} shutdown`);
+        try { 
+            await exec(`"${this.installPath}/shell/MuMuManager.exe" control -v ${this.emulatorId} shutdown`);
+        } catch (error) {
+            logError(`Unable to kill emulator, error: ${error}`);
+        }
     }
 
     async startEmulator() {
-        this.startEmulatorBeginTime = new Date();
+        if (!this.deviceNames) {
+            logError(`Can't start emulator because of no device names.`);
 
-        await exec(`"${this.installPath}/shell/MuMuManager.exe" control -v ${this.emulatorId} launch -pkg com.r2studio.robotmon`);
+            return;
+        }
 
-        await new Promise(f => setTimeout(f, 20000));
+        try {    
+            this.startEmulatorBeginTime = new Date();
 
-        for (let deviceName of this.deviceNames) {
-            this.startService(deviceName);
+            await exec(`"${this.installPath}/shell/MuMuManager.exe" control -v ${this.emulatorId} launch -pkg com.r2studio.robotmon`);
+
+            await new Promise(f => setTimeout(f, 20000));
+
+            for (let deviceName of this.deviceNames) {
+                this.connectAdb(deviceName);
+            }
+
+            await new Promise(f => setTimeout(f, 2000));
+
+            for (let deviceName of this.deviceNames) {
+                this.startService(deviceName);
+            }
+        } catch (error) {
+            logError(`Unable to start emulator, error: ${error}`);
         }
     }
 
@@ -93,35 +119,9 @@ export class MumuPlayerEmulator extends Emulator {
 			log(`starting service for ${deviceName}...`);
 			
             await exec(`"${this.installPath}/shell/adb.exe" -s ${deviceName} shell nohup sh -c "'LD_LIBRARY_PATH=/system/lib:/data/data/com.r2studio.robotmon/lib:/data/app/~~rXsxvLiK9gVsdhrjyD5VFQ==/com.r2studio.robotmon-Li83vmg8rtG0L2OuGy4_3Q==/lib:/data/app/~~rXsxvLiK9gVsdhrjyD5VFQ==/com.r2studio.robotmon-Li83vmg8rtG0L2OuGy4_3Q==/lib/x86 CLASSPATH=/data/app/~~rXsxvLiK9gVsdhrjyD5VFQ==/com.r2studio.robotmon-Li83vmg8rtG0L2OuGy4_3Q==/base.apk app_process32 /system/bin com.r2studio.robotmon.Main $@' > /dev/null 2> /dev/null && sleep 1 &"`);
-        } catch (error) {}
-    }
-
-    async restartEmulator() {
-        await this.killEmulator();
-
-        await new Promise(f => setTimeout(f, 5000));
-
-        await this.startEmulator();
-    }
-
-    async minimizeEmulator() {
-        if (!this.emulatorName) {
-            logError("Need emualtor name to minimize emulator.");
-
-            return;
+        } catch (error) {
+            logError(`Encountered error when starting service: ${error}`);
         }
-
-        await exec(`${resourcesDir}/windowMode -title "${this.emulatorName}" -mode minimized`);
-    }
-
-    async restoreEmulator() {
-        if (!this.emulatorName) {
-            logError("Need emualtor name to restore emulator.");
-
-            return;
-        }
-
-        await exec(`${resourcesDir}/windowMode -title "${this.emulatorName}" -mode normal`);
     }
 
 }
