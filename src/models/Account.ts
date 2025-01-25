@@ -14,6 +14,8 @@ export class Account {
 
     deathThreshold: number = 20;
 
+    status: string;
+
     emulator?: Emulator;
 
     constructor(accountName: string, discordUserId?: string, emulator?: Emulator, deathThreshold?: number) {
@@ -30,6 +32,8 @@ export class Account {
         if (deathThreshold) {
             this.deathThreshold = deathThreshold;
         }
+
+        this.status = "Unknown";
     }
 
     reportAlive(): void {
@@ -69,11 +73,14 @@ export class Account {
         if (!this.emulator) {
             return;
         }
-
         this.lastAlive = undefined;
+        if (this.emulator) {
+            this.emulator.startEmulatorBeginTime = undefined;
+            this.emulator.startGameBeginTime = undefined;
+        }
         log(`Trying to kill game for ${this.accountName}.`);
 
-        this.emulator!.killGame();
+        this.emulator.killGame();
     }
 
     async startGame() {
@@ -109,6 +116,10 @@ export class Account {
         }
 
         this.lastAlive = undefined;
+        if (this.emulator) {
+            this.emulator.startEmulatorBeginTime = undefined;
+            this.emulator.startGameBeginTime = undefined;
+        }
 
         log(`Trying to kill emulator for ${this.accountName}.`);
 
@@ -135,7 +146,7 @@ export class Account {
     async minimizeEmulator() {
         try {
             log(`Trying to minimize emulator for ${this.accountName}.`);
-                        
+
             this.emulator?.minimizeEmulator();
         } catch (error) {
             logError(`Unable to minimize emulator, error: ${error}`);

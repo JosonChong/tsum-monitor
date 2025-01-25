@@ -1,6 +1,4 @@
 import { readFileSync } from 'fs';
-import * as http from 'http';
-import * as url from 'url';
 import { inMemoryLogs, log, logError } from "./utils/logUtils";
 import schedule from 'node-schedule';
 import { Account } from './models/Account';
@@ -17,36 +15,51 @@ import { Server as WebSocketServer, WebSocket } from 'ws';
 const config = JSON.parse(readFileSync('./config.json', 'utf-8'));
 const port = config.serverPort ? config.serverPort : 3000;
 
-const accountCommands = {
+interface AccountCommand {
+    shortNames: string[];
+    action: (account: Account, additionalParams?: any) => void;
+    allowAll?: boolean;
+}
+
+const accountCommands: Record<string, AccountCommand> = {
     'killGame': { shortNames: ['kg'], action: function(account: Account, additionalParams?: any) { account.killGame(); }},
     'startGame': { shortNames: ['sg'], action: function(account: Account, additionalParams?: any) { account.startGame(); }},
     'restartGame': { shortNames: ['rsg'], action: function(account: Account, additionalParams?: any) { account.restartGame(); }},
     'killEmulator': { shortNames: ['ke'], action: function(account: Account, additionalParams?: any) { account.killEmulator(); }},
     'startEmulator': { shortNames: ['se'], action: function(account: Account, additionalParams?: any) { account.startEmulator(); }}, 
     'restartEmulator': { shortNames: ['rse'], action: function(account: Account, additionalParams?: any) { account.restartEmulator(); }},
-    'minimizeEmulator': { shortNames: ['me'], action: function(account: Account, additionalParams?: any) { account.minimizeEmulator(); }},
-    'restoreEmulator': { shortNames: ['ne'], action: function(account: Account, additionalParams?: any) { account.restoreEmulator(); }}
+    'minimizeEmulator': { shortNames: ['me'], allowAll: true, action: function(account: Account, additionalParams?: any) { account.minimizeEmulator(); }},
+    'restoreEmulator': { shortNames: ['ne'], allowAll: true, action: function(account: Account, additionalParams?: any) { account.restoreEmulator(); }}
 };
 
-// Add type definition for commands
-type CommandKey = keyof typeof accountCommands;
-
 function runAccountCommand(commandKey: string, accountName: string, additionalParams?: any) {
-    const account = accounts.find(a => a.accountName === accountName);
-    
-    if (!account) {
-        console.error(`Account not found: ${accountName}`);
-        return;
-    }
-
-    for (const [key, command] of Object.entries(accountCommands)) {
-        if (key === commandKey || command.shortNames.includes(commandKey)) {
-            command.action(account, additionalParams);
-            return;
+    let command;
+    for (const [key, accountCommand] of Object.entries(accountCommands)) {
+        if (key === commandKey || accountCommand.shortNames.includes(commandKey)) {
+            command = accountCommand;
         }
     }
 
-    logError(`Invalid command: ${commandKey}`);
+    if (!command) {
+        logError(`Invalid command: ${commandKey}.`);
+        return;
+    }
+
+    if (command.allowAll && accountName === "all") {
+        for (let account of accounts) {
+            command.action(account, additionalParams);
+        }
+
+        return;
+    }
+
+    const account = accounts.find(a => a.accountName === accountName);
+    if (!account) {
+        logError(`Account not found: ${accountName}`);
+        return;
+    }
+
+    command.action(account, additionalParams);
 }
 
 const app = express();
@@ -100,6 +113,8 @@ app.get('/', (req, res) => {
 
         account.reportAlive();
         log(logMessage);
+
+        pushAccountStatus(account, "Online");
     }
 });
 
@@ -124,12 +139,18 @@ app.use(express.static('public'));
 // Create WebSocket server attached to the Express server
 const server = app.listen(port, () => {
     log(`Server running at http://localhost:${port}/`);
+
     const discordBotToken = config.discordBotToken;
-    if (!discordBotToken) {
-        log('Discord bot token not found in config.json.');
-        process.exit(1);
+    if (discordBotToken) {
+        try {
+            client.login(discordBotToken);
+        } catch (error) {
+            logError('Failed to start discord bot, running server UI only.');
+        }
+    } else {
+        log('Discord bot token not found in config.json, not starting discord bot.');
     }
-    client.login(discordBotToken);
+
     startScheduleJob();
     setWSClients(clients);
 });
@@ -152,7 +173,7 @@ wss.on('connection', (ws) => {
     const accountsData = accounts.map(account => ({
         name: account.accountName,
         emulator: account.emulator?.emulatorName || "None",
-        status: account.isDead() ? "Offline" : "Online",
+        status: account.status,
         lastAlive: account.lastAlive,
     }));
     
@@ -218,105 +239,52 @@ client.once('ready', () => {
 client.on('messageCreate', (message) => {
     if (message.author.bot) return;
 
-    log(`Received command ${message.content} from ${message.author.username}`)
+    if (!message.content.startsWith('!')) return;
+
+    log(`Received command ${message.content} from ${message.author.username}`);
 
     let messages = message.content.split(" ");
+    let command = messages[0].slice(1);
 
-    if (messages[0] === '!accounts') {
+    if (command === 'accounts') {
         message.reply('```' + JSON.stringify(accounts, null, 2) + '```');
+        return;
     }
 
-    if (messages[0] === '!id') {
+    if (command === 'id') {
         message.reply(message.author.id);
+        return;
     }
 
-    if (messages[0] === '!killGame' || messages[0] === '!kg') {
-        let account = accounts.find(a => a.accountName === messages[1]);
-
-        if (account) {
-            account.killGame();
-        }
-    }
-
-    if (messages[0] === '!startGame' || messages[0] === '!sg') {
-        let account = accounts.find(a => a.accountName === messages[1]);
-
-        if (account) {
-            account.startGame();
-        }
-    }
-
-    if (messages[0] === '!restartGame' || messages[0] === '!rsg') {
-        let account = accounts.find(a => a.accountName === messages[1]);
-
-        if (account) {
-            account.restartGame();
-        }
-    }
-
-    if (messages[0] === '!killEmulator' || messages[0] === '!ke') {
-        let account = accounts.find(a => a.accountName === messages[1]);
-
-        if (account) {
-            account.killEmulator();
-        }
-    }
-
-    if (messages[0] === '!startEmulator'  || messages[0] === '!se') {
-        let account = accounts.find(a => a.accountName === messages[1]);
-
-        if (account) {
-            account.startEmulator();
-        }
-    }
-
-    if (messages[0] === '!restartEmulator' || messages[0] === '!rse') {
-        let account = accounts.find(a => a.accountName === messages[1]);
-
-        if (account) {
-            account.restartEmulator();
-        }
-    }
-
-    if (messages[0] === '!minimizeEmulator' || messages[0] === '!me') {
-        if (messages[1] === "all") {
-            for (let account of accounts) {
-                account.minimizeEmulator();
-            }
-
-            return;
-        }
-
-        let account = accounts.find(a => a.accountName === messages[1]);
-
-        if (account) {
-            account.minimizeEmulator();
-        }
-    }
-
-    if (messages[0] === '!restoreEmulator' || messages[0] === '!ne') {
-        if (messages[1] === "all") {
-            for (let account of accounts) {
-                account.restoreEmulator();
-            }
-
-            return;
-        }
-
-        let account = accounts.find(a => a.accountName === messages[1]);
-
-        if (account) {
-            account.restoreEmulator();
-        }
-    }
+    runAccountCommand(command, messages[1]);
 });
+
+function pushAccountStatus(account: Account, status: string) {
+    account.status = status;
+
+    const accountData = {
+        name: account.accountName,
+        emulator: account.emulator?.emulatorName || "None",
+        status: account.status,
+        lastAlive: account.lastAlive,
+    };
+
+    const payload = JSON.stringify({
+        type: 'accountUpdate',
+        data: accountData
+    });
+    
+    clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(payload);
+        }
+    });
+}
 
 function startScheduleJob() {
     let job = schedule.scheduleJob('*/30 * * * * *', async function() {
         try {
-            let statusChanged = false;
             for (let account of accounts) {
-                const previousStatus = account.isDead();
                 if (account.isStartingEmulator()) {
                     if (account.startEmulatorFailed()) {
                         logError(`Failed to start emulator for ${account.accountName}, retrying...`);
@@ -325,6 +293,8 @@ function startScheduleJob() {
                     } else {
                         log(`Still starting emulator for ${account.accountName}.`);
                     }
+                    
+                    pushAccountStatus(account, "Starting Emulator");
                 } else if (account.isStartingGame()) {
                     if (account.startGameFailed()) {
                         logError(`Failed to start game for ${account.accountName}, retrying...`);
@@ -333,12 +303,16 @@ function startScheduleJob() {
                     } else {
                         log(`Still starting game for ${account.accountName}.`);
                     }
+
+                    pushAccountStatus(account, "Starting Game");
                 } else if (account.isDead() && !account.notifiedDeath) {
                     if (account.emulator) {
                         const message = `${account.accountName} lost connection, trying to restart game.`;
                         logError(message);
 
                         account.restartGame();
+
+                        pushAccountStatus(account, "Restarting Game");
                     } else {
                         const errorMessage = `${account.accountName} lost connection, last alive: ${moment(account.lastAlive).format('HH:mm:ss')}`;
                         logError(errorMessage);
@@ -352,39 +326,13 @@ function startScheduleJob() {
                         }
     
                         account.notifiedDeath = true;
+
+                        pushAccountStatus(account, "Offline");
                     }
                 }
-                
-                // If status changed, we'll want to broadcast updates
-                if (previousStatus !== account.isDead()) {
-                    statusChanged = true;
-                }
-            }
-            
-            // Broadcast account updates if any status changed
-            if (statusChanged) {
-                console.log('Account status changed, broadcasting updates'); // Debug log
-                const accountsData = accounts.map(account => ({
-                    name: account.accountName,
-                    emulator: account.emulator?.emulatorName || "None",
-                    status: account.isDead() ? "Offline" : "Online",
-                    lastAlive: account.lastAlive,
-                }));
-                
-                const payload = JSON.stringify({
-                    type: 'accounts',
-                    data: accountsData
-                });
-                
-                clients.forEach(client => {
-                    if (client.readyState === WebSocket.OPEN) {
-                        client.send(payload);
-                    }
-                });
             }
         } catch (error) {
             logError("Schedule Job Exception");
-            console.error('Schedule job error:', error); // Debug log
         }
     });
     return job;

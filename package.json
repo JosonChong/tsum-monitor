@@ -12,7 +12,9 @@
   "scripts": {
     "start": "ts-node ./src/server.ts",
     "build": "npx tsc -p . --outDir ./build && cp ./build/src/utils/logUtilsPkg.js ./build/src/utils/logUtils.js && rm ./build/src/utils/logUtilsPkg.js && cp -r ./assets/ ./build/assets/",
-    "postbuild": "pkg -t node18-win-x64 . --output dist/server.exe"
+    "postbuild": "pkg -t node18-win-x64 . --output dist/server.exe && node postbuild.js",
+    "buildWin": "npx tsc -p . --outDir ./build/src && xcopy .\\build\\src\\utils\\logUtilsPkg.js .\\build\\src\\utils\\logUtils.js* /Y && del .\\build\\src\\utils\\logUtilsPkg.js && xcopy .\\assets\\ .\\build\\assets\\ /E /I /Y",
+    "postbuildWin": "pkg -t node18-win-x64 . --output dist/server.exe && node postbuild.js"
   },
   "keywords": [],
   "author": "",
