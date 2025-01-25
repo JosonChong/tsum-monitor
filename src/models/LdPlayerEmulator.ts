@@ -41,7 +41,7 @@ export class LdPlayerEmulator extends Emulator {
     
             await new Promise(f => setTimeout(f, 1000));
     
-            await exec(`${this.installPath}/dnconsole.exe action --name ${this.emulatorName} --key call.keyboard --value home`);
+            await exec(`${this.installPath}/ldconsole.exe action --name ${this.emulatorName} --key call.keyboard --value home`);
     
             await new Promise(f => setTimeout(f, 1000));
     
