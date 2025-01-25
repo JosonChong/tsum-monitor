@@ -17,10 +17,219 @@
         href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" 
         rel="stylesheet">
     <style>
+        /* Cat theme colors */
+        :root[data-theme="dark"] {
+            --bg-color: #2D2D34;  /* Dark gray with slight purple tint */
+            --text-color: #E8E6EA;
+            --card-bg: #363640;
+            --card-border: #4A4A53;
+            --card-header-bg: #3F3F48;
+            --table-bg: #363640;
+            --table-hover: #4A4A53;
+            --logs-bg: #2D2D34;
+            --logs-border: #4A4A53;
+            --dropdown-bg: #363640;
+            --dropdown-border: #4A4A53;
+            --dropdown-hover: #4A4A53;
+            --accent-color: #FF9494;  /* Soft pink for cat nose */
+            --secondary-accent: #FFB4B4;  /* Lighter pink for highlights */
+            --paw-color: rgba(255, 148, 148, 0.1);  /* Transparent pink for paw prints */
+        }
+
+        :root[data-theme="light"] {
+            --bg-color: #FFF6F6;  /* Very light pink */
+            --text-color: #4A4A53;
+            --card-bg: #FFFFFF;
+            --card-border: #FFD6D6;
+            --card-header-bg: #FFF0F0;
+            --table-bg: #FFFFFF;
+            --table-hover: #FFF0F0;
+            --logs-bg: #FFF6F6;
+            --logs-border: #FFD6D6;
+            --dropdown-bg: #FFFFFF;
+            --dropdown-border: #FFD6D6;
+            --dropdown-hover: #FFF0F0;
+            --accent-color: #FF9494;
+            --secondary-accent: #FFB4B4;
+            --paw-color: rgba(255, 148, 148, 0.05);
+        }
+
+        /* Add cat paw background pattern */
+        body::before {
+            content: "🐾";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.03;
+            font-size: 2rem;
+            pointer-events: none;
+            z-index: -1;
+            animation: float 20s linear infinite;
+            background-repeat: repeat;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0); }
+        }
+
+        /* Cute card styles */
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .card-header {
+            border-radius: 15px 15px 0 0;
+            position: relative;
+        }
+
+        /* Add cat ears to cards */
+        .card-header::before,
+        .card-header::after {
+            content: "";
+            position: absolute;
+            top: -10px;
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-bottom: 20px solid var(--accent-color);
+            opacity: 0.2;
+        }
+
+        .card-header::before {
+            left: 20px;
+            transform: rotate(-20deg);
+        }
+
+        .card-header::after {
+            left: 50px;
+            transform: rotate(20deg);
+        }
+
+        /* Cute button styles */
+        .btn {
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Status badge styles */
+        .status-badge {
+            border-radius: 20px;
+            padding: 0.4rem 1rem;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .status-online {
+            background-color: rgba(25, 135, 84, 0.1);
+            color: #198754;
+            border: 2px solid rgba(25, 135, 84, 0.2);
+        }
+
+        .status-offline {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+            border: 2px solid rgba(220, 53, 69, 0.2);
+        }
+
+        /* Theme toggle button with cat theme */
+        .theme-toggle {
+            background-color: var(--card-bg);
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+            padding: 0.6rem 1.2rem;
+            border-radius: 25px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        /* Logs container with cat theme */
+        .logs-container {
+            border-radius: 15px;
+            border: 2px solid var(--card-border);
+            padding: 15px;
+        }
+
+        .logs-container p {
+            padding: 4px 8px;
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+        }
+
+        .logs-container p:hover {
+            background-color: var(--paw-color);
+        }
+
+        /* Table styles */
+        .table {
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .table th {
+            background-color: var(--card-header-bg);
+            border-bottom: 2px solid var(--accent-color);
+        }
+
+        .table td {
+            vertical-align: middle;
+        }
+
+        /* Auto-scroll button */
+        #autoScrollButton {
+            background-color: var(--accent-color);
+            opacity: 0.8;
+            transition: all 0.3s ease;
+        }
+
+        #autoScrollButton:hover {
+            opacity: 1;
+            transform: scale(1.1) rotate(360deg);
+        }
+
+        #autoScrollButton.active {
+            background-color: var(--secondary-accent);
+            box-shadow: 0 0 15px var(--accent-color);
+        }
+
+        /* Add cute loading animation */
+        .loading-text::after {
+            content: "nyaa~";
+            animation: loadingDots 1.5s infinite;
+            font-family: 'Comic Sans MS', cursive;
+            color: var(--accent-color);
+        }
+
+        @keyframes loadingDots {
+            0% { content: "nyaa"; }
+            33% { content: "nyaa."; }
+            66% { content: "nyaa.."; }
+            100% { content: "nyaa..."; }
+        }
+
         /* Global Dark Theme */
         body {
-            background-color: #121212; /* Dark background */
-            color: #e0e0e0; /* Light text for readability */
+            background-color: var(--bg-color);
+            color: var(--text-color);
             font-family: 'Roboto', sans-serif; /* Applied Google font */
         }
         .container {
@@ -33,27 +242,27 @@
             color: #ffffff;   /* Brighter white for emphasis */
         }
         .card {
-            background-color: #1e1e1e; /* Darker card background */
-            border: 1px solid #333; /* Subtle border for cards */
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
         }
         .card-header {
-            background-color: #212121; /* Slightly lighter for contrast */
-            color: #e0e0e0;
+            background-color: var(--card-header-bg);
+            color: var(--text-color);
             font-weight: bold;
         }
         .table-dark {
-            background-color: #212121; /* Dark table header */
-            color: #e0e0e0; /* Light text in table headers */
+            background-color: var(--table-bg);
+            color: var(--text-color);
         }
         .table-hover tbody tr:hover {
-            background-color: #333; /* Highlight rows on hover */
+            background-color: var(--table-hover);
         }
         .logs-container {
             height: 300px;
             overflow-y: auto;
-            background-color: #2b2b2b;
-            color: #e0e0e0;
-            border: 1px solid #444;
+            background-color: var(--logs-bg);
+            color: var(--text-color);
+            border: 1px solid var(--logs-border);
             padding: 10px;
             border-radius: 5px;
             font-family: 'Consolas', monospace;  /* Better font for logs */
@@ -104,31 +313,6 @@
         .timestamp-error {
             color: #ff3300; /* Red for error */
         }
-        /* IntelliJ-style floating button for auto-scroll */
-        #autoScrollButton {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            background-color: #444;
-            color: #e0e0e0;
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-            transition: background-color 0.3s, transform 0.3s;
-            z-index: 1;
-        }
-        #autoScrollButton.active {
-            background-color: #008c00; /* Green when active */
-            transform: scale(1.1); /* Slightly larger when active */
-        }
-        #autoScrollButton:hover {
-            background-color: #555;
-        }
         /* Account table styles */
         .table {
             margin-bottom: 0;
@@ -162,25 +346,6 @@
 
         .dropdown-divider {
             border-top: 1px solid #444;
-        }
-
-        .status-badge {
-            display: inline-block;
-            margin-bottom: 0.2rem;
-            white-space: nowrap;
-            width: auto;
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-        }
-
-        .status-online {
-            background-color: rgba(25, 135, 84, 0.2);
-            color: #198754;
-        }
-
-        .status-offline {
-            background-color: rgba(220, 53, 69, 0.2);
-            color: #dc3545;
         }
 
         .card-header {
@@ -611,9 +776,253 @@
             background-color: rgba(173, 181, 189, 0.2);
             color: #adb5bd;
         }
+
+        /* Add cat-themed background patterns */
+        body {
+            position: relative;
+            background-image: 
+                url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><text x="0" y="15" font-size="15">🐱</text></svg>'),
+                url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><text x="0" y="15" font-size="15">😺</text></svg>'),
+                url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><text x="0" y="15" font-size="15">😸</text></svg>');
+            background-size: 64px 64px;
+            background-position: 
+                0 0,
+                32px 32px,
+                64px 64px;
+            background-repeat: repeat;
+            background-attachment: fixed;
+        }
+
+        /* Add overlay to make background cats subtle */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-color);
+            opacity: 0.97;
+            z-index: -1;
+        }
+
+        /* Add bouncing cat cursor */
+        * {
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="16" height="16"><text y="16">🐾</text></svg>'), auto;
+        }
+
+        /* Add cat ears to theme toggle */
+        .theme-toggle {
+            position: relative;
+            padding-top: 15px;
+        }
+
+        .theme-toggle::before,
+        .theme-toggle::after {
+            content: "";
+            position: absolute;
+            top: -5px;
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 15px solid var(--accent-color);
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle::before {
+            left: 10px;
+            transform: rotate(-30deg);
+        }
+
+        .theme-toggle::after {
+            right: 10px;
+            transform: rotate(30deg);
+        }
+
+        .theme-toggle:hover::before {
+            transform: rotate(-20deg) scale(1.1);
+        }
+
+        .theme-toggle:hover::after {
+            transform: rotate(20deg) scale(1.1);
+        }
+
+        /* Add cat tail to cards */
+        .card::after {
+            content: "~";
+            position: absolute;
+            bottom: -10px;
+            right: 20px;
+            font-size: 40px;
+            color: var(--accent-color);
+            transform: rotate(90deg);
+            opacity: 0.2;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover::after {
+            transform: rotate(45deg);
+            bottom: -5px;
+        }
+
+        /* Add cat-themed status indicators */
+        .status-online::before {
+            content: "😺";
+            margin-right: 5px;
+        }
+
+        .status-offline::before {
+            content: "😿";
+            margin-right: 5px;
+        }
+
+        .status-restarting::before {
+            content: "😸";
+            margin-right: 5px;
+        }
+
+        /* Add cat-themed scrollbar */
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-color);
+            border-radius: 10px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><text x="0" y="15" font-size="15">🐾</text></svg>');
+            background-size: 12px 12px;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        /* Add cat-themed buttons */
+        .btn {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::after {
+            content: "🐱";
+            position: absolute;
+            right: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover::after {
+            right: 10px;
+            opacity: 1;
+        }
+
+        /* Add bouncing animation to loading text */
+        .loading-text {
+            display: inline-block;
+            animation: bounce 0.5s ease infinite alternate;
+        }
+
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-5px); }
+        }
+
+        /* Add cat-themed tooltips */
+        [data-tooltip] {
+            position: relative;
+        }
+
+        [data-tooltip]:hover::before {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 5px 10px;
+            background: var(--card-bg);
+            border: 2px solid var(--accent-color);
+            border-radius: 10px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1000;
+        }
+
+        [data-tooltip]:hover::after {
+            content: "🐱";
+            position: absolute;
+            bottom: calc(100% - 5px);
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+        }
+
+        /* Add cat-themed table hover effect */
+        .table tbody tr:hover {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><text x="0" y="15" font-size="15">🐾</text></svg>');
+            background-size: 20px 20px;
+            background-repeat: repeat-x;
+            background-position: center;
+        }
+
+        /* Add cat-themed auto-scroll button */
+        #autoScrollButton {
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><text x="0" y="15" font-size="15">😺</text></svg>');
+            background-size: cover;
+        }
+
+        #autoScrollButton.active {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><text x="0" y="15" font-size="15">😸</text></svg>');
+        }
+
+        /* Add cat-themed log entries */
+        .logs-container p::before {
+            content: "🐱";
+            margin-right: 5px;
+            opacity: 0.5;
+        }
+
+        .logs-container p:hover::before {
+            opacity: 1;
+        }
+
+        /* Add cat-themed error messages */
+        .timestamp-error::before {
+            content: "😾";
+            margin-right: 5px;
+        }
+
+        /* Add cat-themed warning messages */
+        .timestamp-warning::before {
+            content: "😿";
+            margin-right: 5px;
+        }
+
+        /* Add cat-themed info messages */
+        .timestamp-info::before {
+            content: "😺";
+            margin-right: 5px;
+        }
     </style>
 </head>
 <body>
+    <!-- Add theme toggle button right after body tag -->
+    <button class="theme-toggle" onclick="toggleTheme()">
+        <i class="bi bi-sun-fill" id="theme-icon"></i>
+        <span id="theme-text">Light Mode</span>
+    </button>
+
     <div class="container-fluid px-4 my-5" style="max-width: 100% !important;">
         <!-- Accounts Section -->
         <div class="card mb-4" style="max-width: 100% !important;">
@@ -630,7 +1039,7 @@
                         </thead>
                         <tbody id="accounts">
                             <tr>
-                                <td colspan="4" class="text-center">Loading accounts...</td>
+                                <td colspan="4" class="text-center loading-text">Loading accounts</td>
                             </tr>
                         </tbody>
                     </table>
@@ -641,7 +1050,7 @@
         <!-- Logs Section -->
         <div class="card">
             <div class="card-body logs-container" id="logs">
-                <p>Loading logs...</p>
+                <p class="loading-text">Loading logs</p>
                 <button id="autoScrollButton" class="btn btn-sm btn-secondary position-absolute">
                     <i class="bi bi-arrow-down-circle"></i>
                 </button>
@@ -903,6 +1312,51 @@
                     return 'bi-question-circle-fill';
             }
         }
+
+        // Add this theme toggle function before your existing scripts
+        function toggleTheme() {
+            const root = document.documentElement;
+            const currentTheme = root.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            root.setAttribute('data-theme', newTheme);
+            
+            // Update button text and icon
+            const themeIcon = document.getElementById('theme-icon');
+            const themeText = document.getElementById('theme-text');
+            
+            if (newTheme === 'dark') {
+                themeIcon.classList.remove('bi-moon-fill');
+                themeIcon.classList.add('bi-sun-fill');
+                themeText.textContent = 'Light Mode';
+            } else {
+                themeIcon.classList.remove('bi-sun-fill');
+                themeIcon.classList.add('bi-moon-fill');
+                themeText.textContent = 'Dark Mode';
+            }
+            
+            // Save preference
+            localStorage.setItem('theme', newTheme);
+        }
+
+        // Add this code to set initial theme based on saved preference
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            
+            const themeIcon = document.getElementById('theme-icon');
+            const themeText = document.getElementById('theme-text');
+            
+            if (savedTheme === 'dark') {
+                themeIcon.classList.remove('bi-moon-fill');
+                themeIcon.classList.add('bi-sun-fill');
+                themeText.textContent = 'Light Mode';
+            } else {
+                themeIcon.classList.remove('bi-sun-fill');
+                themeIcon.classList.add('bi-moon-fill');
+                themeText.textContent = 'Dark Mode';
+            }
+        });
     </script>
 </body>
 </html>
