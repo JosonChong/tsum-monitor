@@ -142,11 +142,10 @@ const server = app.listen(port, () => {
 
     const discordBotToken = config.discordBotToken;
     if (discordBotToken) {
-        try {
-            client.login(discordBotToken);
-        } catch (error) {
-            logError('Failed to start discord bot, running server UI only.');
-        }
+        client.login(discordBotToken).then(() => {
+        }).catch((error) => {
+            log('Failed to start discord bot, running server UI only.');
+        });
     } else {
         log('Discord bot token not found in config.json, not starting discord bot.');
     }
