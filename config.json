@@ -1,9 +1,9 @@
 {
-    "discordServerToken": "<discord server token here>",
+    "discordBotToken": "<(optional) discord server token here>",
     "accounts": [
         {
             "account": "<account name here>",
-            "discordUserId": "<discord user id here, get by !id command>",
+            "discordUserId": "<(optional) discord user id here, get by !id command>",
             "deathThreshold": 15,
             "emulator": {
                 "type": "Ld",
@@ -15,7 +15,7 @@
         },
         {
             "account": "<account name here>",
-            "discordUserId": "<discord user id here, get by !id command>",
+            "discordUserId": "<(optional) discord user id here, get by !id command>",
             "deathThreshold": 20,
             "emulator": {
                 "type": "Mumu",
