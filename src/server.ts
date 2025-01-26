@@ -27,7 +27,7 @@ const accountCommands: Record<string, AccountCommand> = {
     'restartGame': { shortNames: ['rsg'], action: function(account: Account) { account.restartGame(); }},
     'killEmulator': { shortNames: ['ke'], action: function(account: Account) { account.killEmulator(); }},
     'startEmulator': { shortNames: ['se'], action: function(account: Account) { account.startEmulator(); }}, 
-    'restartEmulator': { shortNames: ['rse'], action: function(account: Account) { account.restartEmulator(); }},
+    'restartEmulator': { shortNames: ['rse'], action: function(account: Account, additionalParams?: any) { account.restartEmulator(additionalParams); }},
     'minimizeEmulator': { shortNames: ['me'], allowAll: true, action: function(account: Account) { account.minimizeEmulator(); }},
     'restoreEmulator': { shortNames: ['ne'], allowAll: true, action: function(account: Account) { account.restoreEmulator(); }},
     'togglePause': { shortNames: ['tp'], action: function(account: Account) { account.togglePause(); }},
@@ -60,7 +60,7 @@ async function runAccountCommand(command: string, accountName: string) {
         return;
     }
 
-    commandObj.action(account);
+    commandObj.action(account, true);
 }
 
 const app = express();
@@ -94,8 +94,9 @@ app.get('/', (req, res) => {
     // start emulator success, start game on emulator
     if (account.isStartingEmulator()) {
         account.emulator!.startEmulatorBeginTime = undefined;
-        account.startGame();
+        account.emulatorRestartAttempts = 0;
         log(`Started emulator for ${account.accountName} successfully, starting Game now...`);
+        account.startGame(true);
     } else {
         res.sendStatus(200);
 
@@ -104,6 +105,7 @@ app.get('/', (req, res) => {
         // start game success
         if (account.isStartingGame()) {
             account.emulator!.startGameBeginTime = undefined;
+            account.gameRestartAttempts = 0;
             logMessage = `Started game for ${account.accountName} successfully.`;
             account.runStartupCommand();
         }
@@ -220,7 +222,14 @@ function pushAccountStatus(account: Account) {
 
 for (let accountData of config.accounts) {
     let emulator = createEmulator(accountData.emulator);
-    let account = new Account(accountData.account, accountData.discordUserId, emulator, accountData.deathThreshold);
+    let account = new Account(
+        accountData.account, 
+        accountData.discordUserId, 
+        emulator, 
+        accountData.deathThreshold,
+        accountData.maxGameRestarts,
+        accountData.maxEmulatorRestarts
+    );
     
     // Set up the status update callback
     account.onStatusUpdate = pushAccountStatus;
@@ -269,7 +278,7 @@ client.on('messageCreate', (message) => {
 });
 
 function startScheduleJob() {
-    let job = schedule.scheduleJob('*/30 * * * * *', async function() {
+    let job = schedule.scheduleJob('*/5 * * * * *', async function() {
         try {
             for (let account of accounts) {
                 if (account.paused) {
@@ -277,19 +286,49 @@ function startScheduleJob() {
                 }
 
                 if (account.isStartingEmulator()) {
-                    if (account.startEmulatorFailed()) {
-                        logError(`Failed to start emulator for ${account.accountName}, retrying...`);
-                        account.restartEmulator();
-                    } else {
-                        log(`Still starting emulator for ${account.accountName}.`);
+                    if (!account.startEmulatorFailed()) {
+                        return;
                     }
+
+                    if (account.emulatorRestartAttempts >= account.maxEmulatorRestarts) {
+                        if (account.notifiedDeath) {
+                            return;
+                        }
+
+                        const message = `Max emulator restart attempts (${account.maxEmulatorRestarts}) reached for ${account.accountName}, please check the emulator and restart it manually.`;
+                        logError(message);
+    
+                        if (account.discordUserId) {
+                            try {
+                                client.users.cache.get(account.discordUserId)!.send(message);
+                            } catch (error) {
+                                logError(`Encountered error when notifying discord user ${account.discordUserId}`);
+                            }
+                        }
+    
+                        account.updateStatus("Offline");
+                        account.notifiedDeath = true;
+                        return;
+                    }
+
+                    let secondsSpent = Math.floor((new Date().getTime() - account.emulator!.startEmulatorBeginTime!.getTime()) / 1000);
+                    logError(`Already spent ${secondsSpent} seconds on starting emulator for ${account.accountName}, retrying...`);
+                    account.restartEmulator();
                 } else if (account.isStartingGame()) {
-                    if (account.startGameFailed()) {
-                        logError(`Failed to start game for ${account.accountName}, retrying...`);
-                        account.restartGame();
-                    } else {
-                        log(`Still starting game for ${account.accountName}.`);
+                    if (!account.startGameFailed()) {
+                        return;
                     }
+
+                    if (account.gameRestartAttempts >= account.maxGameRestarts) {
+                        logError(`Max game restart attempts (${account.maxGameRestarts}) reached for ${account.accountName}, attempting emulator restart...`);
+                        account.gameRestartAttempts = 0;
+                        account.restartEmulator();
+                        return;
+                    }
+
+                    let secondsSpent = Math.floor((new Date().getTime() - account.emulator!.startGameBeginTime!.getTime()) / 1000);
+                    logError(`Already spent ${secondsSpent} seconds on starting game for ${account.accountName}, retrying...`);
+                    account.restartGame();
                 } else if (account.isDead() && !account.notifiedDeath) {
                     if (account.emulator) {
                         const message = `${account.accountName} lost connection, trying to restart game.`;

@@ -21,7 +21,7 @@ export class Emulator {
 
     startEmulatorBeginTime?: Date; 
 
-    startEmulatorTimeLimit: number = 2;
+    startEmulatorTimeLimit: number = 1.5;
 
     getAdbPath(): string {
         return '';
