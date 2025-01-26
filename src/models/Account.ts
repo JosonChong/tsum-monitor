@@ -16,7 +16,11 @@ export class Account {
 
     status: string;
 
+    lastUpdate?: Date;
+
     emulator?: Emulator;
+
+    paused: boolean = false;
 
     constructor(accountName: string, discordUserId?: string, emulator?: Emulator, deathThreshold?: number) {
         this.accountName = accountName;
@@ -36,12 +40,26 @@ export class Account {
         this.status = "Unknown";
     }
 
+    updateStatus(status: string) {
+        this.status = status;
+        this.lastUpdate = new Date();
+        // Emit status update event or call callback
+        if (this.onStatusUpdate) {
+            this.onStatusUpdate(this);
+        }
+    }
+
+    // Add a callback property for status updates
+    onStatusUpdate?: (account: Account) => void;
+
     reportAlive(): void {
         this.lastAlive = new Date();
         this.notifiedDeath = false;
+        this.updateStatus("Online");
     }
 
     isDead(): boolean {
+        if (this.paused) return false;
         return !!this.lastAlive && dateUtil.timePastInMinutes(this.lastAlive) > this.deathThreshold;
     }
 
@@ -70,97 +88,121 @@ export class Account {
     }
 
     async killGame() {
-        if (!this.emulator) {
-            return;
-        }
-        this.lastAlive = undefined;
         if (this.emulator) {
-            this.emulator.startEmulatorBeginTime = undefined;
+            log(`Killing game for ${this.accountName}...`);
+            await this.emulator.killGame();
+            this.lastAlive = undefined;
             this.emulator.startGameBeginTime = undefined;
+            this.paused = false;
+            this.updateStatus("Offline");
         }
-        log(`Trying to kill game for ${this.accountName}.`);
-
-        this.emulator.killGame();
     }
 
     async startGame() {
-        if (!this.emulator) {
-            return;
+        if (this.emulator) {
+            log(`Starting game for ${this.accountName}...`);
+            this.updateStatus("Starting Game");
+            this.emulator.startGameBeginTime = new Date();
+            await this.emulator.startGame();
         }
-
-        log(`Trying to start game for ${this.accountName}.`);
-        this.emulator!.startGame();
     }
 
     async restartGame() {
-        await this.killGame();
-
-        await this.startGame();
+        if (this.emulator) {
+            log(`Restarting game for ${this.accountName}...`);
+            this.updateStatus("Restarting Game");
+            await this.emulator.killGame();
+            this.lastAlive = undefined;
+            await this.emulator.startGame();
+        }
     }
 
     async runStartupCommand() {
-        if (!this.emulator) {
-            return;
+        if (this.emulator) {
+            await this.emulator.runStartupCommand();
         }
-
-        await new Promise(f => setTimeout(f, 3000));
-
-        log(`Trying to run startup command for ${this.accountName}.`);
-
-        this.emulator!.runStartupCommand();
     }
 
     async killEmulator() {
-        if (!this.emulator) {
-            return;
-        }
-
-        this.lastAlive = undefined;
         if (this.emulator) {
-            this.emulator.startEmulatorBeginTime = undefined;
+            log(`Killing emulator for ${this.accountName}...`);
+            await this.emulator.killEmulator();
+            this.lastAlive = undefined;
             this.emulator.startGameBeginTime = undefined;
+            this.emulator.startEmulatorBeginTime = undefined;
+            this.paused = false;
+            this.updateStatus("Offline");
         }
-
-        log(`Trying to kill emulator for ${this.accountName}.`);
-
-        this.emulator!.killEmulator();
     }
 
     async startEmulator() {
-        if (!this.emulator) {
-            return;
+        if (this.emulator) {
+            log(`Starting emulator for ${this.accountName}...`);
+            this.updateStatus("Starting Emulator");
+            this.emulator.startEmulatorBeginTime = new Date();
+            await this.emulator.startEmulator();
         }
-
-        log(`Trying to start emulator for ${this.accountName}.`);
-        this.emulator!.startEmulator();
     }
 
     async restartEmulator() {
-        await this.killEmulator();
-
-        await new Promise(f => setTimeout(f, 5000));
-
-        await this.startEmulator();
+        if (this.emulator) {
+            log(`Restarting emulator for ${this.accountName}...`);
+            this.updateStatus("Restarting Emulator");
+            await this.emulator.killEmulator();
+            this.lastAlive = undefined;
+            await new Promise(f => setTimeout(f, 2000));
+            await this.emulator.startEmulator();
+        }
     }
 
     async minimizeEmulator() {
-        try {
-            log(`Trying to minimize emulator for ${this.accountName}.`);
-
-            this.emulator?.minimizeEmulator();
-        } catch (error) {
-            logError(`Unable to minimize emulator, error: ${error}`);
+        if (this.emulator) {
+            log(`Minimizing emulator for ${this.accountName}...`);
+            await this.emulator.minimizeEmulator();
         }
     }
 
     async restoreEmulator() {
-        try {
-            log(`Trying to restore emulator for ${this.accountName}.`);
-
-            this.emulator?.restoreEmulator();
-        } catch (error) {
-            logError(`Unable to restore emulator, error: ${error}`);
+        if (this.emulator) {
+            log(`Restoring emulator for ${this.accountName}...`);
+            await this.emulator.restoreEmulator();
         }
+    }
+
+    togglePause() {
+        // Don't allow pausing if status is Unknown or Offline
+        if (!this.paused && (this.status === "Unknown" || this.status === "Offline")) {
+            log(`Cannot pause ${this.accountName} while ${this.status}`);
+            return;
+        }
+
+        this.paused = !this.paused;
+        log(`${this.accountName} is ${this.paused ? 'paused' : 'resumed'}`);
+
+        if (this.paused) {
+            this.updateStatus("Paused");
+            return;
+        }
+
+        let status;
+        if (this.emulator) {
+            if (this.emulator.startEmulatorBeginTime) {
+                this.emulator.startEmulatorBeginTime = new Date();
+                status = "Starting Emulator";
+            }   
+
+            if (this.emulator.startGameBeginTime) {
+                this.emulator.startGameBeginTime = new Date();
+                status = "Starting Game";
+            }
+        }
+
+        if (!status) {
+            this.lastUpdate = new Date();
+            status = "Resumed";
+        }
+
+        this.updateStatus(status);
     }
 
 }

@@ -183,6 +183,16 @@
             color: #dc3545;
         }
 
+        .status-paused {
+            background-color: rgba(255, 165, 0, 0.2);  /* Orange background with transparency */
+            color: #ffa500;  /* Orange text */
+        }
+
+        .status-restarting {
+            background-color: rgba(108, 117, 125, 0.2);
+            color: #6c757d;
+        }
+
         .card-header {
             background-color: #252525;
             border-bottom: 1px solid #444;
@@ -749,7 +759,16 @@
             
             const html = accounts.map(account => `
                 <tr>
-                    <td class="align-middle">${account.name}</td>
+                    <td class="align-middle">
+                        ${account.name}
+                        <br>
+                        <button class="btn btn-sm ${account.paused ? 'btn-outline-success' : 'btn-outline-secondary'} mt-2" 
+                            onclick="performAction('togglePause', '${account.name}')"
+                            ${(account.status === 'Unknown' || account.status === 'Offline') && !account.paused ? 'disabled' : ''}>
+                            <i class="bi ${account.paused ? 'bi-play-fill' : 'bi-pause-fill'}"></i>
+                            ${account.paused ? 'Resume' : 'Pause'}
+                        </button>
+                    </td>
                     <td class="align-middle">
                         <span class="badge bg-primary">
                             ${account.emulator}
@@ -761,7 +780,7 @@
                                 <i class="bi ${getStatusIcon(account.status)}"></i>
                                 ${account.status}
                             </span>
-                            <small class="text-muted" data-timestamp="${account.lastAlive}">${getTimeAgo(account.lastAlive)}</small>
+                            ${account.lastUpdate ? `<small class="text-muted" data-timestamp="${account.lastUpdate}">${getTimeAgo(account.lastUpdate)}</small>` : ''}
                         </div>
                     </td>
                     <td class="align-middle">
@@ -824,8 +843,20 @@
             const rows = tbody.getElementsByTagName('tr');
             for (let row of rows) {
                 const nameCell = row.cells[0];
-                if (nameCell && nameCell.textContent.trim() === accountData.name) {
-                    // Update the status cell (third column)
+                if (nameCell && nameCell.textContent.includes(accountData.name)) {
+                    // Update the name cell with pause button
+                    nameCell.innerHTML = `
+                        ${accountData.name}
+                        <br>
+                        <button class="btn btn-sm ${accountData.status === 'Paused' ? 'btn-outline-success' : 'btn-outline-secondary'} mt-2" 
+                            onclick="performAction('togglePause', '${accountData.name}')"
+                            ${(accountData.status === 'Unknown' || accountData.status === 'Offline') && !accountData.paused ? 'disabled' : ''}>
+                            <i class="bi ${accountData.status === 'Paused' ? 'bi-play-fill' : 'bi-pause-fill'}"></i>
+                            ${accountData.status === 'Paused' ? 'Resume' : 'Pause'}
+                        </button>
+                    `;
+
+                    // Update the status cell
                     const statusCell = row.cells[2];
                     if (statusCell) {
                         statusCell.innerHTML = `
@@ -834,7 +865,7 @@
                                     <i class="bi ${getStatusIcon(accountData.status)}"></i>
                                     ${accountData.status}
                                 </span>
-                                <small class="text-muted" data-timestamp="${accountData.lastAlive}">${getTimeAgo(accountData.lastAlive)}</small>
+                                ${accountData.lastUpdate ? `<small class="text-muted" data-timestamp="${accountData.lastUpdate}">${getTimeAgo(accountData.lastUpdate)}</small>` : ''}
                             </div>
                         `;
                     }
@@ -875,9 +906,12 @@
         function getStatusClass(status) {
             switch(status) {
                 case 'Online':
+                case 'Resumed':
                     return 'status-online';
                 case 'Offline':
                     return 'status-offline';
+                case 'Paused':
+                    return 'status-paused';
                 case 'Starting Game':
                 case 'Starting Emulator':
                 case 'Restarting Game':
@@ -891,9 +925,12 @@
         function getStatusIcon(status) {
             switch(status) {
                 case 'Online':
+                case 'Resumed':
                     return 'bi-check-circle-fill';
                 case 'Offline':
                     return 'bi-x-circle-fill';
+                case 'Paused':
+                    return 'bi-pause-circle-fill';
                 case 'Starting Game':
                 case 'Starting Emulator':
                 case 'Restarting Game':
