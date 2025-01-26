@@ -24,10 +24,10 @@ interface AccountCommand {
 const accountCommands: Record<string, AccountCommand> = {
     'killGame': { shortNames: ['kg'], action: function(account: Account) { account.killGame(); }},
     'startGame': { shortNames: ['sg'], action: function(account: Account) { account.startGame(); }},
-    'restartGame': { shortNames: ['rsg'], action: function(account: Account) { account.restartGame(); }},
+    'restartGame': { shortNames: ['rsg'], action: function(account: Account) { account.restartGame(true); }},
     'killEmulator': { shortNames: ['ke'], action: function(account: Account) { account.killEmulator(); }},
     'startEmulator': { shortNames: ['se'], action: function(account: Account) { account.startEmulator(); }}, 
-    'restartEmulator': { shortNames: ['rse'], action: function(account: Account, additionalParams?: any) { account.restartEmulator(additionalParams); }},
+    'restartEmulator': { shortNames: ['rse'], action: function(account: Account) { account.restartEmulator(true); }},
     'minimizeEmulator': { shortNames: ['me'], allowAll: true, action: function(account: Account) { account.minimizeEmulator(); }},
     'restoreEmulator': { shortNames: ['ne'], allowAll: true, action: function(account: Account) { account.restoreEmulator(); }},
     'togglePause': { shortNames: ['tp'], action: function(account: Account) { account.togglePause(); }},
@@ -60,7 +60,7 @@ async function runAccountCommand(command: string, accountName: string) {
         return;
     }
 
-    commandObj.action(account, true);
+    commandObj.action(account);
 }
 
 const app = express();
