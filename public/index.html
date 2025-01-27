@@ -808,13 +808,17 @@
                                             <td>
                                                 <button class="btn btn-sm btn-outline-danger w-100" onclick="performAction('killEmulator', '${account.name}')">Kill Emulator</button>
                                             </td>
-                                            <td></td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-success w-100" onclick="performAction('startService', '${account.name}')">Start Service</button>
+                                            </td>
                                         </tr>
                                         <tr>
                                             <td>
                                                 <button class="btn btn-sm btn-outline-warning w-100" onclick="performAction('restartEmulator', '${account.name}')">Restart Emulator</button>
                                             </td>
-                                            <td></td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-success w-100" onclick="performAction('runStartup', '${account.name}')">Run Startup</button>
+                                            </td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -826,6 +830,8 @@
                                 <button class="btn btn-sm btn-outline-warning w-100 mb-1" onclick="performAction('restartEmulator', '${account.name}')">Restart Emulator</button>
                                 <button class="btn btn-sm btn-outline-secondary w-100 mb-1" onclick="performAction('minimizeEmulator', '${account.name}')">Minimize Emulator</button>
                                 <button class="btn btn-sm btn-outline-secondary w-100 mb-1" onclick="performAction('restoreEmulator', '${account.name}')">Restore Emulator</button>
+                                <button class="btn btn-sm btn-outline-success w-100 mb-1" onclick="performAction('startService', '${account.name}')">Start Service</button>
+                                <button class="btn btn-sm btn-outline-success w-100 mb-1" onclick="performAction('runStartup', '${account.name}')">Run Startup</button>
                             </div>
                         </div>
                     </td>

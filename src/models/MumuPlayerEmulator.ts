@@ -43,20 +43,16 @@ export class MumuPlayerEmulator extends Emulator {
         }
     }
 
-    async startGame() {
+    async returnToHome() {
         try {
-            this.startGameBeginTime = new Date();
-    
-            await new Promise(f => setTimeout(f, 1000));
-    
             await exec(`"${this.installPath}/shell/MuMuManager.exe" control -v ${this.emulatorId} tool func -n go_home`);
-    
-            await new Promise(f => setTimeout(f, 1000));
-    
-            await exec(`"${this.installPath}/shell/MuMuManager.exe" control -v ${this.emulatorId} app launch -pkg com.linecorp.LGTMTM`);
         } catch (error) {
-            logError(`Unable to start game, error: ${error}`);
+            logError(`Unable to return to home, error: ${error}.`);
         }
+    }
+
+    async launchGame() {
+        await exec(`"${this.installPath}/shell/MuMuManager.exe" control -v ${this.emulatorId} app launch -pkg com.linecorp.LGTMTM`);
     }
 
     async runStartupCommand() {
@@ -86,32 +82,12 @@ export class MumuPlayerEmulator extends Emulator {
         }
     }
 
-    async startEmulator() {
-        if (!this.deviceNames) {
-            logError(`Can't start emulator because of no device names.`);
-
-            return;
+    async launchEmulator() {
+        if (!this.emulatorId || !this.deviceNames) {
+            throw new Error(`Can't start emulator because of no device id or device names.`);
         }
 
-        try {    
-            this.startEmulatorBeginTime = new Date();
-
-            await exec(`"${this.installPath}/shell/MuMuManager.exe" control -v ${this.emulatorId} launch -pkg com.r2studio.robotmon`);
-
-            await new Promise(f => setTimeout(f, 20000));
-
-            for (let deviceName of this.deviceNames) {
-                this.connectAdb(deviceName);
-            }
-
-            await new Promise(f => setTimeout(f, 2000));
-
-            for (let deviceName of this.deviceNames) {
-                this.startService(deviceName);
-            }
-        } catch (error) {
-            logError(`Unable to start emulator, error: ${error}`);
-        }
+        await exec(`"${this.installPath}/shell/MuMuManager.exe" control -v ${this.emulatorId} launch -pkg com.r2studio.robotmon`);
     }
 
     async startService(deviceName: string){

@@ -37,11 +37,57 @@ export class Emulator {
     
     async killGame() {}
 
-    async startGame() {}
+    async returnToHome() {}
+
+    async launchGame() {}
+
+    async startGame() {
+        try {
+            this.startGameBeginTime = new Date();
+
+            await new Promise(f => setTimeout(f, 1000));
+
+            await this.returnToHome();
+
+            await new Promise(f => setTimeout(f, 1000));
+
+            await this.launchGame();
+        } catch (error) {
+            logError(`Unable to start game, error: ${error}`);
+        }
+    }
 
     async killEmulator() {}
 
-    async startEmulator() {}
+    async launchEmulator() {}
+
+    async startService(deviceName: string) {}
+
+    async startServiceForAllDevices() {
+        for (let deviceName of this.deviceNames!) {
+            this.startService(deviceName);
+        }
+    }
+
+    async startEmulator() {
+        try {
+            this.startEmulatorBeginTime = new Date();
+
+            await this.launchEmulator();
+
+            await new Promise(f => setTimeout(f, 20000));
+
+            for (let deviceName of this.deviceNames!) {
+                this.connectAdb(deviceName);
+            }
+
+            await new Promise(f => setTimeout(f, 2000));
+
+            this.startServiceForAllDevices();
+        } catch (error) {
+            logError(`Unable to start emulator, error: ${error}`);
+        }
+    }
 
     async runStartupCommand() {}
 

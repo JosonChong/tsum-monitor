@@ -31,6 +31,8 @@ const accountCommands: Record<string, AccountCommand> = {
     'minimizeEmulator': { shortNames: ['me'], allowAll: true, action: function(account: Account) { account.minimizeEmulator(); }},
     'restoreEmulator': { shortNames: ['ne'], allowAll: true, action: function(account: Account) { account.restoreEmulator(); }},
     'togglePause': { shortNames: ['tp'], action: function(account: Account) { account.togglePause(); }},
+    'startService': { shortNames: ['ss'], action: function(account: Account) { account.emulator?.startServiceForAllDevices(); }},
+    'runStartup': { shortNames: ['rs'], action: function(account: Account) { account.runStartupCommand(); }},
 };
 
 async function runAccountCommand(command: string, accountName: string) {
