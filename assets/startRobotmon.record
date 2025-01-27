@@ -1,0 +1,85 @@
+{
+    "operations": [
+        {
+            "timing": 16289,
+            "operationId": "PutMultiTouch",
+            "points": [
+                {
+                    "id": 1,
+                    "x": 5980,
+                    "y": 3700,
+                    "state": 1
+                }
+            ]
+        },
+        {
+            "timing": 16291,
+            "operationId": "PutMultiTouch",
+            "points": []
+        },
+        {
+            "timing": 16389,
+            "operationId": "PutMultiTouch",
+            "points": [
+                {
+                    "id": 1,
+                    "x": 5980,
+                    "y": 3700,
+                    "state": 0
+                }
+            ]
+        },
+        {
+            "timing": 16391,
+            "operationId": "PutMultiTouch",
+            "points": []
+        },
+        {
+            "timing": 26234,
+            "operationId": "PutMultiTouch",
+            "points": [
+                {
+                    "id": 1,
+                    "x": 2740,
+                    "y": 740,
+                    "state": 1
+                }
+            ]
+        },
+        {
+            "timing": 26234,
+            "operationId": "PutMultiTouch",
+            "points": []
+        },
+        {
+            "timing": 26318,
+            "operationId": "PutMultiTouch",
+            "points": [
+                {
+                    "id": 1,
+                    "x": 2740,
+                    "y": 740,
+                    "state": 0
+                }
+            ]
+        },
+        {
+            "timing": 26320,
+            "operationId": "PutMultiTouch",
+            "points": []
+        }
+    ],
+    "recordInfo": {
+        "loopType": 0,
+        "loopTimes": 1,
+        "circleDuration": 27257,
+        "loopInterval": 0,
+        "loopDuration": 0,
+        "accelerateTimes": 1,
+        "accelerateTimesEx": 1,
+        "recordName": "",
+        "createTime": "2025-01-11 12:55:22",
+        "playOnBoot": true,
+        "rebootTiming": 0
+    }
+}

@@ -13,7 +13,7 @@ export class MumuPlayerEmulator extends Emulator {
 
     installPath: string = 'C:/Program Files/MuMu Player 12';
 
-    constructor(emulatorId: string, deviceNames: string[], emulatorName?: string, installPath?: string, startupCommand?: string) {
+    constructor(emulatorId: string, deviceNames: string[], emulatorName?: string, installPath?: string, startupCommand?: string, addStartRobotmonScript?: boolean) {
         super();
         this.emulatorId = emulatorId;
         this.deviceNames = deviceNames;
@@ -28,6 +28,10 @@ export class MumuPlayerEmulator extends Emulator {
 
         if (startupCommand) {
             this.startupCommand = startupCommand;
+        }
+
+        if (addStartRobotmonScript !== undefined) {
+            this.addStartRobotmonScript = addStartRobotmonScript;
         }
     }
 

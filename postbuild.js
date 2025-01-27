@@ -34,3 +34,4 @@ function copyDirectory(src, dest) {
 }
 
 copyDirectory('public', 'dist/public');
+copyDirectory('assets', 'dist/assets');

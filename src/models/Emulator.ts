@@ -23,6 +23,8 @@ export class Emulator {
 
     startEmulatorTimeLimit: number = 1.5;
 
+    addStartRobotmonScript: boolean = true;
+
     getAdbPath(): string {
         return '';
     }
