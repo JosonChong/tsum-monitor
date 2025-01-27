@@ -252,7 +252,7 @@ export class Account {
         }
 
         if (!status) {
-            this.lastUpdate = new Date();
+            this.lastAlive = new Date();
             status = "Resumed";
         }
 
