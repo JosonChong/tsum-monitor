@@ -157,9 +157,11 @@ export class Account {
     }
 
     async runStartupCommand() {
-        if (this.emulator) {
-            await this.emulator.runStartupCommand();
+        if (!this.emulator || !this.emulator.startupCommand) {
+            return;
         }
+
+        await this.emulator.runCommand(this.emulator.startupCommand, true);
     }
 
     async killEmulator() {

@@ -59,18 +59,14 @@ export class MumuPlayerEmulator extends Emulator {
         await exec(`"${this.installPath}/shell/MuMuManager.exe" control -v ${this.emulatorId} app launch -pkg com.linecorp.LGTMTM`);
     }
 
-    async runStartupCommand() {
-        if (!this.startupCommand) {
-            return;
-        }
-
+    async runCommand(command: string, startup: boolean = false) {
         try {
-            const transformedCommand = this.startupCommand
+            const transformedCommand = command
                     .replace("<installPath>", this.installPath)
                     .replace("<emulatorId>", this.emulatorId)
                     .replace("<emulatorName>", this.emulatorName ? this.emulatorName : "");
 
-            log(`Trying to run command on MuMuPlayer ${this.emulatorId}: ${transformedCommand}`);
+            log(`Trying to run ${startup ? 'startup ' : ''}command on MuMuPlayer ${this.emulatorId}: ${transformedCommand}`);
     
             await exec(transformedCommand);
         } catch (error) {

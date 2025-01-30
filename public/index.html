@@ -8,7 +8,7 @@
     <link 
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" 
         rel="stylesheet" 
-        integrity="sha384-GnrkY8A3hZ8LXDN0G1qA2rbY4bML5HQrqwZuyj1Bc8JfJ1L5jJlRnldJ0H7y" 
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" 
         crossorigin="anonymous">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
@@ -44,9 +44,6 @@
         .table-dark {
             background-color: #212121; /* Dark table header */
             color: #e0e0e0; /* Light text in table headers */
-        }
-        .table-hover tbody tr:hover {
-            background-color: #333; /* Highlight rows on hover */
         }
         .logs-container {
             height: 300px;
@@ -562,11 +559,7 @@
         }
 
         .text-muted {
-            font-size: 0.75rem;
-            opacity: 0.8;
-            display: block;
-            line-height: 1;
-            text-align: center;
+            color: #9e9e9e !important;  /* Lighter gray that's more visible on dark background */
         }
 
         .d-flex.flex-column.align-items-center {
@@ -621,6 +614,88 @@
             background-color: rgba(173, 181, 189, 0.2);
             color: #adb5bd;
         }
+
+        .modal-content {
+            border: 1px solid #444;
+        }
+        
+        .modal .form-control {
+            border: 1px solid #444;
+        }
+        
+        .modal .form-control:focus {
+            border-color: #666;
+            box-shadow: 0 0 0 0.25rem rgba(255,255,255,0.1);
+        }
+        
+        .modal-header {
+            border-bottom: 1px solid #444;
+        }
+        
+        .modal-footer {
+            border-top: 1px solid #444;
+        }
+
+        .modal {
+            display: none;
+        }
+        
+        .modal.show {
+            display: block;
+        }
+
+        .modal-dialog {
+            position: relative;
+            width: auto;
+            margin: 0.5rem;
+            pointer-events: none;
+        }
+
+        .modal-dialog-centered {
+            display: flex;
+            align-items: center;
+            min-height: calc(100% - 1rem);
+        }
+
+        @media (min-width: 576px) {
+            .modal-dialog {
+                max-width: 500px;
+                margin: 1.75rem auto;
+            }
+            .modal-dialog-centered {
+                min-height: calc(100% - 3.5rem);
+            }
+        }
+
+        .modal-content {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            pointer-events: auto;
+            background-clip: padding-box;
+            border: 1px solid #444;
+            border-radius: 0.3rem;
+            outline: 0;
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1040;
+        }
+
+        .modal-backdrop.fade {
+            opacity: 0;
+        }
+
+        .modal-backdrop.show {
+            opacity: 0.5;
+        }
     </style>
 </head>
 <body>
@@ -629,7 +704,7 @@
         <div class="card mb-4" style="max-width: 100% !important;">
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-dark table-hover mb-0" style="width: 100% !important;">
+                    <table class="table table-dark mb-0" style="width: 100% !important;">
                         <thead>
                             <tr>
                                 <th>Name</th>
@@ -659,12 +734,45 @@
         </div>
     </div>
 
-    <!-- Bootstrap JS and dependencies -->
+    <!-- Update the modal markup -->
+    <div class="modal fade" id="gravityModal" tabindex="-1" aria-labelledby="gravityModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark text-light">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="gravityModalLabel">Change Gravity</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="gravityForm">
+                        <input type="hidden" id="gravityAccountName">
+                        <div class="mb-3">
+                            <label for="gravityX" class="form-label">X Axis</label>
+                            <input type="number" class="form-control bg-dark text-light" id="gravityX" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="gravityY" class="form-label">Y Axis</label>
+                            <input type="number" class="form-control bg-dark text-light" id="gravityY" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="gravityZ" class="form-label">Z Axis</label>
+                            <input type="number" class="form-control bg-dark text-light" id="gravityZ" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="submitGravityChange()">Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script 
         src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" 
-        integrity="sha384-lTDFpprkuy7vQdS3gN0EG7eEXNEMCcSpfB5jCgi6Sezv8U0O4xnpssZSjuG8lgkZ" 
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" 
         crossorigin="anonymous"></script>
     <script>
+        let accounts = []; // Store accounts data
         let isAutoScrollEnabled = true;
         const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const ws = new WebSocket(`${wsProtocol}//${window.location.host}`);
@@ -770,9 +878,7 @@
                         </button>
                     </td>
                     <td class="align-middle">
-                        <span class="badge bg-primary">
-                            ${account.emulator}
-                        </span>
+                        ${account.emulator}
                     </td>
                     <td class="align-middle">
                         <div class="d-flex flex-column align-items-center">
@@ -790,48 +896,48 @@
                                     <tbody>
                                         <tr>
                                             <td style="width: 50%;">
-                                                <button class="btn btn-sm btn-outline-danger w-100" onclick="performAction('killGame', '${account.name}')">Kill Game</button>
+                                                <button class="btn btn-sm btn-outline-primary w-100" onclick="performAction('killGame', '${account.name}')">Kill Game</button>
                                             </td>
                                             <td style="width: 50%;">
-                                                <button class="btn btn-sm btn-outline-secondary w-100" onclick="performAction('minimizeEmulator', '${account.name}')">Minimize Emulator</button>
+                                                <button class="btn btn-sm btn-outline-primary w-100" onclick="performAction('minimizeEmulator', '${account.name}')">Minimize Emulator</button>
                                             </td>
                                         </tr>
                                         <tr>
                                             <td>
-                                                <button class="btn btn-sm btn-outline-warning w-100" onclick="performAction('restartGame', '${account.name}')">Restart Game</button>
+                                                <button class="btn btn-sm btn-outline-primary w-100" onclick="performAction('restartGame', '${account.name}')">Restart Game</button>
                                             </td>
                                             <td>
-                                                <button class="btn btn-sm btn-outline-secondary w-100" onclick="performAction('restoreEmulator', '${account.name}')">Restore Emulator</button>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <button class="btn btn-sm btn-outline-danger w-100" onclick="performAction('killEmulator', '${account.name}')">Kill Emulator</button>
-                                            </td>
-                                            <td>
-                                                <button class="btn btn-sm btn-outline-success w-100" onclick="performAction('startService', '${account.name}')">Start Service</button>
+                                                <button class="btn btn-sm btn-outline-primary w-100" onclick="performAction('restoreEmulator', '${account.name}')">Restore Emulator</button>
                                             </td>
                                         </tr>
                                         <tr>
                                             <td>
-                                                <button class="btn btn-sm btn-outline-warning w-100" onclick="performAction('restartEmulator', '${account.name}')">Restart Emulator</button>
+                                                <button class="btn btn-sm btn-outline-primary w-100" onclick="performAction('killEmulator', '${account.name}')">Kill Emulator</button>
                                             </td>
                                             <td>
-                                                <button class="btn btn-sm btn-outline-success w-100" onclick="performAction('runStartup', '${account.name}')">Run Startup</button>
+                                                <button class="btn btn-sm btn-outline-primary w-100" onclick="performAction('startService', '${account.name}')">Start Service</button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary w-100" onclick="performAction('restartEmulator', '${account.name}')">Restart Emulator</button>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary w-100" onclick="showGravityModal('${account.name}', ${account.defaultGravity?.x}, ${account.defaultGravity?.y}, ${account.defaultGravity?.z})">Change Gravity</button>
                                             </td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
                             <div class="action-buttons-mobile">
-                                <button class="btn btn-sm btn-outline-danger w-100 mb-1" onclick="performAction('killGame', '${account.name}')">Kill Game</button>
-                                <button class="btn btn-sm btn-outline-warning w-100 mb-1" onclick="performAction('restartGame', '${account.name}')">Restart Game</button>
-                                <button class="btn btn-sm btn-outline-danger w-100 mb-1" onclick="performAction('killEmulator', '${account.name}')">Kill Emulator</button>
-                                <button class="btn btn-sm btn-outline-warning w-100 mb-1" onclick="performAction('restartEmulator', '${account.name}')">Restart Emulator</button>
-                                <button class="btn btn-sm btn-outline-secondary w-100 mb-1" onclick="performAction('minimizeEmulator', '${account.name}')">Minimize Emulator</button>
-                                <button class="btn btn-sm btn-outline-secondary w-100 mb-1" onclick="performAction('restoreEmulator', '${account.name}')">Restore Emulator</button>
-                                <button class="btn btn-sm btn-outline-success w-100 mb-1" onclick="performAction('startService', '${account.name}')">Start Service</button>
-                                <button class="btn btn-sm btn-outline-success w-100 mb-1" onclick="performAction('runStartup', '${account.name}')">Run Startup</button>
+                                <button class="btn btn-sm btn-outline-primary w-100 mb-1" onclick="performAction('killGame', '${account.name}')">Kill Game</button>
+                                <button class="btn btn-sm btn-outline-primary w-100 mb-1" onclick="performAction('restartGame', '${account.name}')">Restart Game</button>
+                                <button class="btn btn-sm btn-outline-primary w-100 mb-1" onclick="performAction('killEmulator', '${account.name}')">Kill Emulator</button>
+                                <button class="btn btn-sm btn-outline-primary w-100 mb-1" onclick="performAction('restartEmulator', '${account.name}')">Restart Emulator</button>
+                                <button class="btn btn-sm btn-outline-primary w-100 mb-1" onclick="performAction('minimizeEmulator', '${account.name}')">Minimize</button>
+                                <button class="btn btn-sm btn-outline-primary w-100 mb-1" onclick="performAction('restoreEmulator', '${account.name}')">Restore</button>
+                                <button class="btn btn-sm btn-outline-primary w-100 mb-1" onclick="performAction('startService', '${account.name}')">Start Service</button>
+                                <button class="btn btn-sm btn-outline-primary w-100 mb-1" onclick="showGravityModal('${account.name}', ${account.defaultGravity?.x}, ${account.defaultGravity?.y}, ${account.defaultGravity?.z})">Change Gravity</button>
                             </div>
                         </div>
                     </td>
@@ -945,6 +1051,59 @@
                 default:
                     return 'bi-question-circle-fill';
             }
+        }
+
+        function showGravityModal(accountName, defaultGravityX, defaultGravityY, defaultGravityZ) {
+            try {
+                const modalElement = document.getElementById('gravityModal');
+                if (!modalElement) {
+                    console.error('Modal element not found');
+                    return;
+                }
+
+                document.getElementById('gravityAccountName').value = accountName;
+                
+                // Set default values
+                setGravityInputs(
+                    defaultGravityX ? defaultGravityX : 0,
+                    defaultGravityY ? defaultGravityY : 0,
+                    defaultGravityZ ? defaultGravityZ : 0
+                );
+                
+                // Show the modal
+                const modal = new bootstrap.Modal(modalElement);
+                modal.show();
+            } catch (error) {
+                console.error('Error showing gravity modal:', error);
+            }
+        }
+
+        function setGravityInputs(x, y, z) {
+            document.getElementById('gravityX').value = x;
+            document.getElementById('gravityY').value = y;
+            document.getElementById('gravityZ').value = z;
+        }
+
+        function submitGravityChange() {
+            const accountName = document.getElementById('gravityAccountName').value;
+            const gravity = {
+                x: Number(document.getElementById('gravityX').value),
+                y: Number(document.getElementById('gravityY').value),
+                z: Number(document.getElementById('gravityZ').value)
+            };
+
+            // Send the command via WebSocket
+            ws.send(JSON.stringify({
+                type: 'command',
+                data: {
+                    command: 'changeGravity',
+                    accountName: accountName,
+                    params: gravity
+                }
+            }));
+
+            // Close the modal
+            bootstrap.Modal.getInstance(document.getElementById('gravityModal')).hide();
         }
     </script>
 </body>

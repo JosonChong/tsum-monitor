@@ -33,9 +33,17 @@ const accountCommands: Record<string, AccountCommand> = {
     'togglePause': { shortNames: ['tp'], action: function(account: Account) { account.togglePause(); }},
     'startService': { shortNames: ['ss'], action: function(account: Account) { account.emulator?.startServiceForAllDevices(); }},
     'runStartup': { shortNames: ['rs'], action: function(account: Account) { account.runStartupCommand(); }},
+    'changeGravity': { 
+        shortNames: ['cg'], 
+        action: function(account: Account, params?: any) {
+            if (params && account.emulator) {
+                account.emulator.changeGravity(params);
+            }
+        }
+    },
 };
 
-async function runAccountCommand(command: string, accountName: string) {
+async function runAccountCommand(command: string, accountName: string, params?: any) {
     let commandObj;
     for (const [key, accountCommand] of Object.entries(accountCommands)) {
         if (key === command || accountCommand.shortNames.includes(command)) {
@@ -50,7 +58,7 @@ async function runAccountCommand(command: string, accountName: string) {
 
     if (commandObj.allowAll && accountName === "all") {
         for (let account of accounts) {
-            commandObj.action(account);
+            commandObj.action(account, params);
         }
 
         return;
@@ -62,7 +70,7 @@ async function runAccountCommand(command: string, accountName: string) {
         return;
     }
 
-    commandObj.action(account);
+    commandObj.action(account, params);
 }
 
 const app = express();
@@ -162,7 +170,8 @@ wss.on('connection', (ws) => {
         emulator: account.emulator?.emulatorName || "None",
         status: account.status,
         lastUpdate: account.lastUpdate,
-        paused: account.paused
+        paused: account.paused,
+        defaultGravity: account.emulator?.defaultGravity
     }));
     
     ws.send(JSON.stringify({
@@ -178,8 +187,8 @@ wss.on('connection', (ws) => {
         try {
             const data = JSON.parse(message.toString());
             if (data.type === 'command') {
-                const { command, accountName } = data.data;
-                runAccountCommand(command, accountName);
+                const { command, accountName, params } = data.data;
+                runAccountCommand(command, accountName, params);
             }
         } catch (error) {
             console.error('Error processing WebSocket message:', error);
@@ -219,7 +228,8 @@ function pushAccountStatus(account: Account) {
         emulator: account.emulator?.emulatorName || "None",
         status: account.status,
         lastUpdate: account.lastUpdate,
-        paused: account.paused
+        paused: account.paused,
+        defaultGravity: account.emulator?.defaultGravity
     };
 
     const payload = JSON.stringify({
@@ -288,7 +298,7 @@ client.on('messageCreate', (message) => {
         return;
     }
 
-    runAccountCommand(command, messages[1]);
+    runAccountCommand(command, messages[1], messages.length > 2 ? messages[2] : undefined);
 });
 
 function startScheduleJob() {

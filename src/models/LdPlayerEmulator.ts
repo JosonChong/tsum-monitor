@@ -1,14 +1,33 @@
 import { log, logError } from '../utils/logUtils';
 import { Emulator } from './Emulator';
 import * as util from 'util';
-const exec = util.promisify(require('child_process').exec);
 import fs from 'fs';
+const exec = util.promisify(require('child_process').exec);
 
 export class LdPlayerEmulator extends Emulator {
 
     emulatorName: string;
 
     installPath: string = 'C:/LDPlayer/LDPlayer64';
+
+    addStartRobotmonScript: boolean = true;
+
+    operationRecordsPath: string = '<installPath>/vms/operationRecords';
+
+    defaultGravity: {} = {x: 0, y: 50, z: 0};
+
+    gravityCommandFormat: string = '<installPath>/ldconsole.exe action --name <emulatorName> --key call.gravity --value <x>,<y>,<z>';
+
+    extractGravityFromStartupCommand(startupCommand: string) {
+        const normalizedCommand = startupCommand.replace(/\s+/g, '');
+        if (normalizedCommand.includes('call.gravity')) {
+            const valueMatch = normalizedCommand.match(/--value([-\d,]+)/);
+            if (valueMatch) {
+                const [x, y, z] = valueMatch[1].split(',').map(v => Number(v));
+                this.defaultGravity = {x: x, y: y, z: z};
+            }
+        }   
+    }
 
     constructor(emulatorName: string, deviceNames: string[], installPath?: string, startupCommand?: string, addStartRobotmonScript?: boolean) {
         super();
@@ -21,7 +40,13 @@ export class LdPlayerEmulator extends Emulator {
 
         if (startupCommand) {
             this.startupCommand = startupCommand;
+
+            try {
+                this.extractGravityFromStartupCommand(startupCommand);
+            } catch (error) {
+                logError(`Unable to extract gravity from startup command, error: ${error}`);
             }
+        }
 
         if (addStartRobotmonScript !== undefined) {
             this.addStartRobotmonScript = addStartRobotmonScript;
@@ -52,16 +77,14 @@ export class LdPlayerEmulator extends Emulator {
         await exec(`${this.installPath}/ldconsole.exe runapp --name ${this.emulatorName} --packagename com.linecorp.LGTMTM`);
     }
 
-    async runStartupCommand() {
-        if (!this.startupCommand) {
-            return;
-        }
-
+    async runCommand(command: string, startup: boolean = false) {
         try {
-            const transformedCommand = this.startupCommand.replace("<installPath>", this.installPath).replace("<emulatorName>", this.emulatorName);
-    
-            log(`Trying to run command on LdPlayer ${this.emulatorName}: ${transformedCommand}`);
-    
+            const transformedCommand = command
+                    .replace("<installPath>", this.installPath)
+                    .replace("<emulatorName>", this.emulatorName);
+
+            log(`Trying to run ${startup ? 'startup ' : ''}command on LdPlayer ${this.emulatorName}: ${transformedCommand}`);
+
             await exec(transformedCommand);
         } catch (error) {
             logError(`Unable to run command, error: ${error}`);
@@ -71,10 +94,10 @@ export class LdPlayerEmulator extends Emulator {
     async killEmulator() {
         if (this.addStartRobotmonScript) {
             try {
-                fs.rmSync(`${this.installPath}/vms/operationRecords/startRobotmon.record`);
-            } catch (error) {
-                log(`Unable to remove startRobotmon.record, error: ${error}`);
-            }
+                let path = this.operationRecordsPath
+                        .replace("<installPath>", this.installPath);
+                fs.rmSync(`${path}/startRobotmon.record`);
+            } catch (error) {}
         }
 
         try {      
@@ -84,18 +107,18 @@ export class LdPlayerEmulator extends Emulator {
         }
     }
 
+    async copyStartRobotmonScript() {
+        const path = this.operationRecordsPath.replace("<installPath>", this.installPath);
+        try {
+            fs.copyFileSync('assets/startRobotmon.record', `${path}/startRobotmon.record`);
+        } catch (error) {
+            logError(`Unable to copy startRobotmon.record to ${path}, please do it manually.`);
+        }
+    }
+
     async launchEmulator() {
         if (!this.deviceNames) {
             throw new Error(`Can't start emulator because of no device names.`);
-        }
-
-        if (this.addStartRobotmonScript) {
-            let path = `${this.installPath}/vms/operationRecords`;
-            try {
-                fs.copyFileSync('assets/startRobotmon.record', `${path}/startRobotmon.record`);
-            } catch (error) {
-                logError(`Unable to copy startRobotmon.record to ${path}, please do it manually.`);
-            }
         }
 
         await exec(`${this.installPath}/ldconsole.exe launchex --name ${this.emulatorName} --packagename com.r2studio.robotmon`);

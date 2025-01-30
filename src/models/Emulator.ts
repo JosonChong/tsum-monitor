@@ -2,7 +2,6 @@ import { logError } from "../utils/logUtils";
 import * as path from 'path';
 import * as util from 'util';
 const exec = util.promisify(require('child_process').exec);
-
 const assetsDir = path.resolve(__dirname, '../../assets');
 
 export class Emulator {
@@ -23,7 +22,15 @@ export class Emulator {
 
     startEmulatorTimeLimit: number = 1.5;
 
-    addStartRobotmonScript: boolean = true;
+    installPath?: string;
+
+    addStartRobotmonScript: boolean = false;
+    
+    defaultGravity?: {}
+
+    operationRecordsPath?: string;
+
+    gravityCommandFormat?: string;
 
     getAdbPath(): string {
         return '';
@@ -71,9 +78,17 @@ export class Emulator {
         }
     }
 
+    async copyStartRobotmonScript() {
+        logError("Emulator doesn't support copying startRobotmon script, please do it manually.");
+    }
+
     async startEmulator() {
         try {
             this.startEmulatorBeginTime = new Date();
+
+            if (this.addStartRobotmonScript && this.installPath && this.operationRecordsPath) {
+                await this.copyStartRobotmonScript();
+            }
 
             await this.launchEmulator();
 
@@ -91,7 +106,22 @@ export class Emulator {
         }
     }
 
-    async runStartupCommand() {}
+    async runCommand(command: string, startup: boolean = false) {}
+
+    async changeGravity(gravity: {x: number, y: number, z: number}) {
+        if (!this.gravityCommandFormat) {
+            logError("Emulator doesn't support gravity change.");
+
+            return;
+        }
+
+        const command = this.gravityCommandFormat
+                .replace("<x>", gravity.x.toString())
+                .replace("<y>", gravity.y.toString())
+                .replace("<z>", gravity.z.toString());
+        
+        await this.runCommand(command);
+    }
 
     async minimizeEmulator() {
         if (!this.emulatorName) {
