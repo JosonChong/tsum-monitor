@@ -133,8 +133,16 @@ app.get('/', (req, res) => {
 app.use(express.static('public'));
 
 // Create WebSocket server attached to the Express server
-const server = app.listen(port, () => {
+const server = app.listen(port, async () => {
     log(`Server running at http://localhost:${port}/`);
+    
+    try {
+        // Launch browser using dynamic import
+        const open = (await import('open')).default;
+        open(`http://localhost:${port}`);
+    } catch (error) {
+        logError(`Failed to launch browser: ${error}`);
+    }
 
     const discordBotToken = config.discordBotToken;
     if (discordBotToken) {
