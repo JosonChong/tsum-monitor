@@ -261,4 +261,37 @@ export class Account {
         this.updateStatus(status);
     }
 
+    reloadConfig(newConfig: any) {
+        try {
+            // Update account properties based on new config
+            if (newConfig.discordUserId) {
+                this.discordUserId = newConfig.discordUserId;
+            }
+            
+            if (newConfig.deathThreshold) {
+                this.deathThreshold = newConfig.deathThreshold;
+            }
+
+            // Update emulator configuration if present
+            if (newConfig.emulator && this.emulator) {
+                if (newConfig.emulator.installPath) {
+                    this.emulator.installPath = newConfig.emulator.installPath;
+                }
+                if (newConfig.emulator.startupCommand) {
+                    this.emulator.startupCommand = newConfig.emulator.startupCommand;
+                }
+                if (newConfig.emulator.deviceNames) {
+                    this.emulator.deviceNames = newConfig.emulator.deviceNames;
+                }
+                if (newConfig.emulator.addStartRobotmonScript !== undefined) {
+                    this.emulator.addStartRobotmonScript = newConfig.emulator.addStartRobotmonScript;
+                }
+            }
+
+            log(`Reloaded configuration for ${this.accountName}`);
+        } catch (error) {
+            logError(`Error reloading config for ${this.accountName}: ${error}`);
+        }
+    }
+
 }
