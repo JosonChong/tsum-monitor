@@ -721,6 +721,28 @@
         .card {
             box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
         }
+
+        /* Add this style for required field asterisk */
+        .text-danger {
+            color: #dc3545 !important;
+        }
+
+        .form-control.bg-dark {
+            background-color: #2b2b2b !important;
+            border-color: #444;
+            color: #e0e0e0;
+        }
+
+        .form-control.bg-dark:focus {
+            background-color: #333 !important;
+            border-color: #666;
+            color: #ffffff;
+            box-shadow: 0 0 0 0.25rem rgba(66, 70, 73, 0.5);
+        }
+
+        .form-label {
+            color: #e0e0e0;
+        }
     </style>
 </head>
 <body>
@@ -805,6 +827,18 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
+                    <div class="mb-4">
+                        <h5>Server Settings</h5>
+                        <div class="mb-3">
+                            <label for="serverPort" class="form-label">Server Port</label>
+                            <input type="number" class="form-control bg-dark text-light" id="serverPort" placeholder="3000">
+                        </div>
+                        <div class="mb-3">
+                            <label for="discordBotToken" class="form-label">Discord Bot Token (optional)</label>
+                            <input type="password" class="form-control bg-dark text-light" id="discordBotToken" placeholder="Enter Discord bot token">
+                        </div>
+                    </div>
+                    <hr class="border-secondary mb-4">
                     <div id="accountsList">
                         <!-- Accounts will be dynamically added here -->
                     </div>
@@ -830,9 +864,10 @@
                 </button>
             </div>
             <div class="card-body text-light">
+                <!-- Account Basic Settings -->
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label class="form-label">Account Name</label>
+                        <label class="form-label">Account Name <span class="text-danger">*</span></label>
                         <input type="text" class="form-control bg-dark text-light border-secondary config-account-name">
                     </div>
                     <div class="col-md-6 mb-3">
@@ -840,11 +875,37 @@
                         <input type="text" class="form-control bg-dark text-light border-secondary config-discord-id">
                     </div>
                 </div>
-                <div class="emulator-config">
+
+                <!-- Game Settings -->
+                <div class="game-config mb-4">
+                    <h6 class="mb-3">Game Settings</h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Death Threshold</label>
+                            <input type="number" class="form-control bg-dark text-light border-secondary config-death-threshold" 
+                                   placeholder="15 mins">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Max Game Restarts</label>
+                            <input type="number" class="form-control bg-dark text-light border-secondary config-max-game-restarts" 
+                                   placeholder="3 mins">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Max Emulator Restarts</label>
+                            <input type="number" class="form-control bg-dark text-light border-secondary config-max-emulator-restarts" 
+                                   placeholder="3 mins">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Emulator Settings -->
+                <div class="emulator-config mb-4">
                     <h6 class="mb-3">Emulator Configuration</h6>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Type</label>
+                            <label class="form-label">Type <span class="text-danger">*</span></label>
                             <select class="form-select bg-dark text-light border-secondary config-emulator-type" onchange="updateEmulatorFields(this)">
                                 <option value="Ld">LDPlayer</option>
                                 <option value="Mumu">MuMu Player</option>
@@ -852,16 +913,16 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Install Path</label>
-                            <input type="text" class="form-control bg-dark text-light border-secondary config-install-path">
+                            <input type="text" class="form-control bg-dark text-light border-secondary config-install-path" placeholder="C:/LDPlayer/LDPlayer64">
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Emulator Name</label>
+                        <div class="col-md-6 mb-3 ld-field">
+                            <label class="form-label">Emulator Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control bg-dark text-light border-secondary config-emulator-name">
                         </div>
                         <div class="col-md-6 mb-3 mumu-field" style="display: none;">
-                            <label class="form-label">Emulator ID</label>
+                            <label class="form-label">Emulator ID <span class="text-danger">*</span></label>
                             <input type="text" class="form-control bg-dark text-light border-secondary config-emulator-id">
                         </div>
                     </div>
@@ -876,17 +937,29 @@
                             </button>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-12 mb-3">
-                            <label class="form-label">Startup Command</label>
-                            <input type="text" class="form-control bg-dark text-light border-secondary config-startup-command">
+                    <div class="mb-3">
+                        <div class="form-check mb-2">
+                            <input type="checkbox" class="form-check-input config-add-start-robotmon-script">
+                            <label class="form-check-label">Add Start Robotmon Script</label>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="form-check">
-                                <input type="checkbox" class="form-check-input config-robotmon-script" id="robotmonScript">
-                                <label class="form-check-label text-light" for="robotmonScript">Add Start Robotmon Script</label>
+                        
+                        <div class="form-check mb-2">
+                            <input type="checkbox" class="form-check-input config-enable-startup-gravity">
+                            <label class="form-check-label">Enable Startup Gravity</label>
+                        </div>
+                        
+                        <div class="startup-gravity-controls" style="display: none;">
+                            <label class="form-label">Startup Gravity Values</label>
+                            <div class="row g-2">
+                                <div class="col-4">
+                                    <input type="number" class="form-control bg-dark text-light config-gravity-x" placeholder="X">
+                                </div>
+                                <div class="col-4">
+                                    <input type="number" class="form-control bg-dark text-light config-gravity-y" placeholder="Y">
+                                </div>
+                                <div class="col-4">
+                                    <input type="number" class="form-control bg-dark text-light config-gravity-z" placeholder="Z">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1067,7 +1140,7 @@
                                                 <button class="btn btn-sm btn-outline-primary w-100" onclick="performAction('restartEmulator', '${account.name}')">Restart Emulator</button>
                                             </td>
                                             <td>
-                                                <button class="btn btn-sm btn-outline-primary w-100" onclick="showGravityModal('${account.name}', ${account.defaultGravity?.x}, ${account.defaultGravity?.y}, ${account.defaultGravity?.z})">Change Gravity</button>
+                                                <button class="btn btn-sm btn-outline-primary w-100" onclick="showGravityModal('${account.name}', ${account.startupGravity?.x}, ${account.startupGravity?.y}, ${account.startupGravity?.z})">Change Gravity</button>
                                             </td>
                                         </tr>
                                     </tbody>
@@ -1081,7 +1154,7 @@
                                 <button class="btn btn-sm btn-outline-primary w-100 mb-1" onclick="performAction('minimizeEmulator', '${account.name}')">Minimize</button>
                                 <button class="btn btn-sm btn-outline-primary w-100 mb-1" onclick="performAction('restoreEmulator', '${account.name}')">Restore</button>
                                 <button class="btn btn-sm btn-outline-primary w-100 mb-1" onclick="performAction('startService', '${account.name}')">Start Service</button>
-                                <button class="btn btn-sm btn-outline-primary w-100 mb-1" onclick="showGravityModal('${account.name}', ${account.defaultGravity?.x}, ${account.defaultGravity?.y}, ${account.defaultGravity?.z})">Change Gravity</button>
+                                <button class="btn btn-sm btn-outline-primary w-100 mb-1" onclick="showGravityModal('${account.name}', ${account.startupGravity?.x}, ${account.startupGravity?.y}, ${account.startupGravity?.z})">Change Gravity</button>
                             </div>
                         </div>
                     </td>
@@ -1198,6 +1271,7 @@
         }
 
         function showGravityModal(accountName, defaultGravityX, defaultGravityY, defaultGravityZ) {
+            console.log(defaultGravityY);
             try {
                 const modalElement = document.getElementById('gravityModal');
                 if (!modalElement) {
@@ -1276,6 +1350,11 @@
 
         function updateVisualEditor(config) {
             currentConfig = config;
+            
+            // Update server settings
+            document.getElementById('serverPort').value = config.serverPort || '';
+            document.getElementById('discordBotToken').value = config.discordBotToken || '';
+            
             const accountsList = document.getElementById('accountsList');
             accountsList.innerHTML = '';
             
@@ -1284,45 +1363,115 @@
             });
         }
 
-        function addAccountToVisualEditor(accountData = null) {
+        function addAccountToVisualEditor(account = null) {
             const template = document.getElementById('accountTemplate');
-            const accountsList = document.getElementById('accountsList');
             const accountElement = template.content.cloneNode(true);
             const accountDiv = accountElement.querySelector('.account-config');
             
-            if (accountData) {
-                accountDiv.querySelector('.config-account-name').value = accountData.account || '';
-                accountDiv.querySelector('.config-discord-id').value = accountData.discordUserId || '';
-                
-                if (accountData.emulator) {
-                    accountDiv.querySelector('.config-emulator-type').value = accountData.emulator.type;
-                    accountDiv.querySelector('.config-install-path').value = accountData.emulator.installPath || '';
-                    accountDiv.querySelector('.config-emulator-name').value = accountData.emulator.emulatorName || '';
-                    accountDiv.querySelector('.config-emulator-id').value = accountData.emulator.emulatorId || '';
-                    accountDiv.querySelector('.config-startup-command').value = accountData.emulator.startupCommand || '';
-                    accountDiv.querySelector('.config-robotmon-script').checked = accountData.emulator.addStartRobotmonScript !== false;
-                    
-                    // Add device name fields
-                    const addDeviceButton = accountDiv.querySelector('.device-names-container').nextElementSibling;
-                    accountData.emulator.deviceNames?.forEach(name => {
-                        addDeviceNameField(addDeviceButton, name);
-                    });
-                    
-                    updateEmulatorFields(accountDiv.querySelector('.config-emulator-type'));
-                }
-            }
-            
+            // Add to the accounts list first so we have it in the DOM
+            const accountsList = document.getElementById('accountsList');
             accountsList.appendChild(accountDiv);
+            
+            // Set default value for Add Start Robotmon Script to true
+            accountDiv.querySelector('.config-add-start-robotmon-script').checked = true;
+            
+            // Fill in values if account data is provided
+            if (account) {
+                accountDiv.querySelector('.config-account-name').value = account.account || '';
+                accountDiv.querySelector('.config-discord-id').value = account.discordUserId || '';
+                accountDiv.querySelector('.config-death-threshold').value = account.deathThreshold || '';
+                accountDiv.querySelector('.config-max-game-restarts').value = account.maxGameRestarts || '';
+                accountDiv.querySelector('.config-max-emulator-restarts').value = account.maxEmulatorRestarts || '';
+                
+                if (account.emulator) {
+                    accountDiv.querySelector('.config-emulator-type').value = account.emulator.type || 'Ld';
+                    accountDiv.querySelector('.config-install-path').value = account.emulator.installPath || '';
+                    accountDiv.querySelector('.config-emulator-name').value = account.emulator.emulatorName || '';
+                    accountDiv.querySelector('.config-add-start-robotmon-script').checked = account.emulator.addStartRobotmonScript || false;
+                    
+                    // Set up device names if they exist in the config
+                    const deviceNamesContainer = accountDiv.querySelector('.device-names-container');
+                    if (account.emulator.deviceNames && account.emulator.deviceNames.length > 0) {
+                        deviceNamesContainer.innerHTML = account.emulator.deviceNames.map(deviceName => `
+                            <div class="input-group mb-2">
+                                <input type="text" class="form-control bg-dark text-light config-device-name" value="${deviceName}">
+                                <button class="btn btn-outline-danger" type="button" onclick="removeDeviceName(this)">Remove</button>
+                            </div>
+                        `).join('');
+                    } else {
+                        // If no device names in config, set defaults based on emulator type
+                        updateEmulatorFields(accountDiv.querySelector('.config-emulator-type'));
+                    }
+                    
+                    // Set up gravity settings if they exist
+                    if (account.emulator.startupGravity) {
+                        const gravityToggle = accountDiv.querySelector('.config-enable-startup-gravity');
+                        const gravityControls = accountDiv.querySelector('.startup-gravity-controls');
+                        
+                        // Enable gravity and show controls
+                        gravityToggle.checked = true;
+                        gravityControls.style.display = 'block';
+                        
+                        // Set gravity values
+                        accountDiv.querySelector('.config-gravity-x').value = account.emulator.startupGravity.x;
+                        accountDiv.querySelector('.config-gravity-y').value = account.emulator.startupGravity.y;
+                        accountDiv.querySelector('.config-gravity-z').value = account.emulator.startupGravity.z;
+                    }
+                }
+            } else {
+                // For new accounts, set default device names based on emulator type
+                updateEmulatorFields(accountDiv.querySelector('.config-emulator-type'));
+            }
+
+            // Update emulator fields based on selected type
+            updateEmulatorFields(accountDiv.querySelector('.config-emulator-type'));
+
+            // Set up gravity toggle listener
+            const gravityToggle = accountDiv.querySelector('.config-enable-startup-gravity');
+            const gravityControls = accountDiv.querySelector('.startup-gravity-controls');
+            gravityToggle.addEventListener('change', (e) => {
+                gravityControls.style.display = e.target.checked ? 'block' : 'none';
+            });
         }
 
         function updateEmulatorFields(selectElement) {
             const accountDiv = selectElement.closest('.account-config');
             const mumuFields = accountDiv.querySelectorAll('.mumu-field');
+            const ldFields = accountDiv.querySelectorAll('.ld-field');
+            const installPathInput = accountDiv.querySelector('.config-install-path');
+            const deviceNamesContainer = accountDiv.querySelector('.device-names-container');
+            
+            // Clear existing device names
+            deviceNamesContainer.innerHTML = '';
             
             if (selectElement.value === 'Mumu') {
                 mumuFields.forEach(field => field.style.display = 'block');
+                ldFields.forEach(field => field.style.display = 'none');
+                installPathInput.placeholder = 'C:/Program Files/MuMu Player 12';
+                
+                const deviceNameHtml = `
+                    <div class="input-group mb-2">
+                        <input type="text" class="form-control bg-dark text-light config-device-name" value="127.0.0.1:16416">
+                        <button class="btn btn-outline-danger" type="button" onclick="removeDeviceName(this)">Remove</button>
+                    </div>
+                `;
+                deviceNamesContainer.innerHTML = deviceNameHtml;
             } else {
                 mumuFields.forEach(field => field.style.display = 'none');
+                ldFields.forEach(field => field.style.display = 'block');
+                installPathInput.placeholder = 'C:/LDPlayer/LDPlayer64';
+                
+                const deviceNamesHtml = `
+                    <div class="input-group mb-2">
+                        <input type="text" class="form-control bg-dark text-light config-device-name" value="127.0.0.1:5555">
+                        <button class="btn btn-outline-danger" type="button" onclick="removeDeviceName(this)">Remove</button>
+                    </div>
+                    <div class="input-group mb-2">
+                        <input type="text" class="form-control bg-dark text-light config-device-name" value="emulator-5554">
+                        <button class="btn btn-outline-danger" type="button" onclick="removeDeviceName(this)">Remove</button>
+                    </div>
+                `;
+                deviceNamesContainer.innerHTML = deviceNamesHtml;
             }
         }
 
@@ -1350,19 +1499,32 @@
         }
 
         function getConfigFromVisualEditor() {
+            const serverPort = parseInt(document.getElementById('serverPort').value) || 3000;
+            const discordBotToken = document.getElementById('discordBotToken').value.trim();
+            
             const accounts = [];
             document.querySelectorAll('.account-config').forEach(accountDiv => {
                 // Get all values and trim them
                 const accountName = accountDiv.querySelector('.config-account-name').value.trim();
                 const discordUserId = accountDiv.querySelector('.config-discord-id').value.trim();
+                const deathThreshold = accountDiv.querySelector('.config-death-threshold').value.trim();
+                const maxGameRestarts = accountDiv.querySelector('.config-max-game-restarts').value.trim();
+                const maxEmulatorRestarts = accountDiv.querySelector('.config-max-emulator-restarts').value.trim();
+                
+                // Get emulator values
                 const emulatorType = accountDiv.querySelector('.config-emulator-type').value;
                 const installPath = accountDiv.querySelector('.config-install-path').value.trim();
                 const emulatorName = accountDiv.querySelector('.config-emulator-name').value.trim();
                 const emulatorId = accountDiv.querySelector('.config-emulator-id')?.value.trim();
-                const startupCommand = accountDiv.querySelector('.config-startup-command').value.trim();
-                const addStartRobotmonScript = accountDiv.querySelector('.config-robotmon-script').checked;
                 
-                // Get device names (already filtered for non-empty values)
+                // Get gravity values
+                const gravityX = parseFloat(accountDiv.querySelector('.config-gravity-x').value);
+                const gravityY = parseFloat(accountDiv.querySelector('.config-gravity-y').value);
+                const gravityZ = parseFloat(accountDiv.querySelector('.config-gravity-z').value) || 0;
+                const addStartRobotmonScript = accountDiv.querySelector('.config-add-start-robotmon-script')?.checked || false;
+                const enableStartupGravity = accountDiv.querySelector('.config-enable-startup-gravity')?.checked || false;
+
+                // Get device names
                 const deviceNames = Array.from(accountDiv.querySelectorAll('.config-device-name'))
                     .map(input => input.value.trim())
                     .filter(name => name);
@@ -1376,35 +1538,53 @@
                 };
 
                 if (discordUserId) account.discordUserId = discordUserId;
+                if (deathThreshold) account.deathThreshold = parseInt(deathThreshold);
+                if (maxGameRestarts) account.maxGameRestarts = parseInt(maxGameRestarts);
+                if (maxEmulatorRestarts) account.maxEmulatorRestarts = parseInt(maxEmulatorRestarts);
 
-                const emulator = {
-                    type: emulatorType
+                const emulatorConfig = {
+                    type: emulatorType,
+                    installPath: installPath,
+                    emulatorName: emulatorName,
+                    addStartRobotmonScript: addStartRobotmonScript
                 };
 
-                if (installPath) emulator.installPath = installPath;
-                if (emulatorName) emulator.emulatorName = emulatorName;
-                if (deviceNames.length > 0) emulator.deviceNames = deviceNames;
-                if (startupCommand) emulator.startupCommand = startupCommand;
-                if (addStartRobotmonScript) emulator.addStartRobotmonScript = true;
+                if (deviceNames.length > 0) emulatorConfig.deviceNames = deviceNames;
                 
-                // Add emulatorId only for Mumu and if it's not empty
-                if (emulatorType === 'Mumu' && emulatorId) {
-                    emulator.emulatorId = emulatorId;
+                // Check if gravity is enabled and has required values
+                if (enableStartupGravity && (gravityX || gravityX === 0) && (gravityY || gravityY === 0)) {
+                    emulatorConfig.startupGravity = {
+                        x: gravityX,
+                        y: gravityY,
+                        z: gravityZ
+                    };
+                } else {
+                    emulatorConfig.startupGravity = undefined;
                 }
-
-                // Only add emulator object if it has properties beyond type
-                if (Object.keys(emulator).length > 1) {
-                    account.emulator = emulator;
+                
+                // Add emulator object if it has properties beyond type
+                if (Object.keys(emulatorConfig).length > 0) {
+                    account.emulator = emulatorConfig;
                 }
 
                 accounts.push(account);
             });
             
-            return { ...currentConfig, accounts: accounts.filter(a => a) };
+            const config = {
+                serverPort: serverPort,
+                accounts: accounts.filter(a => a)
+            };
+
+            // Only add Discord token if it's not empty
+            if (discordBotToken) {
+                config.discordBotToken = discordBotToken;
+            }
+            
+            return config;
         }
 
         function submitServerConfigChange() {
-            const config = JSON.stringify(getConfigFromVisualEditor(), null, 2);
+            const config = JSON.stringify(getConfigFromVisualEditor());
             
             ws.send(JSON.stringify({
                 type: 'command',

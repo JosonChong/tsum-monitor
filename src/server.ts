@@ -25,11 +25,10 @@ function createEmulator(emulatorData: any): Emulator | undefined {
                 emulatorData.emulatorName, 
                 emulatorData.deviceNames, 
                 emulatorData.installPath, 
-                emulatorData.startupCommand
+                emulatorData.startupCommand,
+                emulatorData.addStartRobotmonScript,
+                emulatorData.startupGravity
             );
-            if (emulatorData.addStartRobotmonScript !== undefined) {
-                ldEmulator.addStartRobotmonScript = emulatorData.addStartRobotmonScript;
-            }
             return ldEmulator;
         case "Mumu":
             const mumuEmulator = new MumuPlayerEmulator(
@@ -37,11 +36,10 @@ function createEmulator(emulatorData: any): Emulator | undefined {
                 emulatorData.deviceNames, 
                 emulatorData.emulatorName, 
                 emulatorData.installPath, 
-                emulatorData.startupCommand
+                emulatorData.startupCommand,
+                emulatorData.addStartRobotmonScript,
+                emulatorData.startupGravity
             );
-            if (emulatorData.addStartRobotmonScript !== undefined) {
-                mumuEmulator.addStartRobotmonScript = emulatorData.addStartRobotmonScript;
-            }
             return mumuEmulator;
         default:
             logError("Unknown emulator type.");
@@ -93,15 +91,11 @@ const accountCommands: Record<string, AccountCommand> = {
     'restoreEmulator': { shortNames: ['ne'], allowAll: true, action: function(account: Account) { account.restoreEmulator(); }},
     'togglePause': { shortNames: ['tp'], action: function(account: Account) { account.togglePause(); }},
     'startService': { shortNames: ['ss'], action: function(account: Account) { account.emulator?.startServiceForAllDevices(); }},
-    'runStartup': { shortNames: ['rs'], action: function(account: Account) { account.runStartupCommand(); }},
-    'changeGravity': { 
-        shortNames: ['cg'], 
-        action: function(account: Account, params?: any) {
-            if (params && account.emulator) {
-                account.emulator.changeGravity(params);
-            }
+    'changeGravity': { shortNames: ['cg'], action: function(account: Account, params?: any) {
+        if (params && account.emulator) {
+            account.emulator.changeGravity(params);
         }
-    },
+    }},
 };
 
 async function runAccountCommand(command: string, accountName: string, params?: any) {
@@ -224,7 +218,7 @@ function pushAccountsData(ws: WebSocket) {
         status: account.status,
         lastUpdate: account.lastUpdate,
         paused: account.paused,
-        defaultGravity: account.emulator?.defaultGravity
+        startupGravity: account.emulator?.startupGravity
     }));
     
     ws.send(JSON.stringify({
@@ -282,7 +276,7 @@ function pushAccountStatus(account: Account) {
         status: account.status,
         lastUpdate: account.lastUpdate,
         paused: account.paused,
-        defaultGravity: account.emulator?.defaultGravity
+        startupGravity: account.emulator?.startupGravity
     };
 
     const payload = JSON.stringify({
