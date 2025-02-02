@@ -156,15 +156,13 @@ export class Account {
         await this.emulator.startGame();
     }
 
-    async runStartupCommand() {
-        console.log("runStartupCommand");
+    async applyStartupGravity() {
         if (!this.emulator || !this.emulator.startupGravity) {
             return;
         }
 
-        console.log(this.emulator.startupGravity);
-
         await this.emulator.changeGravity(this.emulator.startupGravity);
+        this.emulator.lastAppliedGravity = new Date();
     }
 
     async killEmulator() {

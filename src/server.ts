@@ -11,6 +11,7 @@ import express from 'express';
 import cors from 'cors';
 import { setWSClients } from './utils/logUtils';
 import { Server as WebSocketServer, WebSocket } from 'ws';
+import { timePastInMinutes } from './utils/dateUtils';
 
 const app = express();
 app.use(cors());
@@ -27,18 +28,20 @@ function createEmulator(emulatorData: any): Emulator | undefined {
                 emulatorData.installPath, 
                 emulatorData.startupCommand,
                 emulatorData.addStartRobotmonScript,
-                emulatorData.startupGravity
+                emulatorData.startupGravity,
+                emulatorData.reapplyGravityEveryMinutes
             );
             return ldEmulator;
         case "Mumu":
             const mumuEmulator = new MumuPlayerEmulator(
-                emulatorData.emulatoreId, 
+                emulatorData.emulatorId, 
                 emulatorData.deviceNames, 
                 emulatorData.emulatorName, 
                 emulatorData.installPath, 
                 emulatorData.startupCommand,
                 emulatorData.addStartRobotmonScript,
-                emulatorData.startupGravity
+                emulatorData.startupGravity,
+                emulatorData.reapplyGravityEveryMinutes
             );
             return mumuEmulator;
         default:
@@ -169,7 +172,7 @@ app.get('/', (req, res) => {
             account.emulator!.startGameBeginTime = undefined;
             account.gameRestartAttempts = 0;
             logMessage = `Started game for ${account.accountName} successfully.`;
-            account.runStartupCommand();
+            account.applyStartupGravity();
         }
 
         if (account.isDead()) {
@@ -368,7 +371,11 @@ function startScheduleJob() {
                     let secondsSpent = Math.floor((new Date().getTime() - account.emulator!.startEmulatorBeginTime!.getTime()) / 1000);
                     logError(`Already spent ${secondsSpent} seconds on starting emulator for ${account.accountName}, retrying...`);
                     account.restartEmulator();
-                } else if (account.isStartingGame()) {
+
+                    return;
+                }
+                
+                if (account.isStartingGame()) {
                     if (!account.startGameFailed()) {
                         return;
                     }
@@ -383,23 +390,39 @@ function startScheduleJob() {
                     let secondsSpent = Math.floor((new Date().getTime() - account.emulator!.startGameBeginTime!.getTime()) / 1000);
                     logError(`Already spent ${secondsSpent} seconds on starting game for ${account.accountName}, retrying...`);
                     account.restartGame();
-                } else if (account.isDead() && !account.notifiedDeath) {
+
+                    return;
+                }
+
+                if (account.isDead()) {
+                    if (account.notifiedDeath) {
+                        return;
+                    }
+                    
                     if (account.emulator) {
                         const message = `${account.accountName} lost connection, trying to restart game.`;
                         logError(message);
                         account.restartGame();
-                    } else {
-                        const errorMessage = `${account.accountName} lost connection, last alive: ${moment(account.lastAlive).format('HH:mm:ss')}`;
-                        logError(errorMessage);
-                        if (account.discordUserId) {
-                            try {
-                                client.users.cache.get(account.discordUserId)!.send(errorMessage);
-                            } catch (error) {
-                                logError(`Encountered error when notifying discord user ${account.discordUserId}`);
-                            }
+                        return;
+                    }
+                    
+                    const errorMessage = `${account.accountName} lost connection, last alive: ${moment(account.lastAlive).format('HH:mm:ss')}`;
+                    logError(errorMessage);
+                    if (account.discordUserId) {
+                        try {
+                            client.users.cache.get(account.discordUserId)!.send(errorMessage);
+                        } catch (error) {
+                            logError(`Encountered error when notifying discord user ${account.discordUserId}`);
                         }
-                        account.notifiedDeath = true;
-                        account.updateStatus("Offline");
+                    }
+                    account.notifiedDeath = true;
+                    account.updateStatus("Offline");
+                    return;
+                }
+
+                if (account.status === "Online" && account.emulator && account.emulator.reapplyGravityEveryMinutes) {
+                    if (!account.emulator.lastAppliedGravity || timePastInMinutes(account.emulator.lastAppliedGravity) >= account.emulator.reapplyGravityEveryMinutes) {
+                        account.applyStartupGravity();
                     }
                 }
             }

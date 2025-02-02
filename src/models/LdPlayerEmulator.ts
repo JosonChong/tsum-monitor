@@ -35,7 +35,9 @@ export class LdPlayerEmulator extends Emulator {
         installPath?: string, 
         startupCommand?: string, 
         addStartRobotmonScript?: boolean,
-        startupGravity?: {x: number, y: number, z: number}) {
+        startupGravity?: {x: number, y: number, z: number},
+        reapplyGravityEveryMinutes?: number
+    ) {
         super();
         this.emulatorName = emulatorName;
         this.deviceNames = deviceNames;
@@ -60,6 +62,10 @@ export class LdPlayerEmulator extends Emulator {
         
         if (startupGravity) {
             this.startupGravity = startupGravity;
+        }
+
+        if (reapplyGravityEveryMinutes) {
+            this.reapplyGravityEveryMinutes = reapplyGravityEveryMinutes;
         }
     }
 

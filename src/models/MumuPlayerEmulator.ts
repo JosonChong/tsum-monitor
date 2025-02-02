@@ -20,7 +20,9 @@ export class MumuPlayerEmulator extends Emulator {
         installPath?: string, 
         startupCommand?: string, 
         addStartRobotmonScript?: boolean,
-        startupGravity?: {x: number, y: number, z: number}) {
+        startupGravity?: {x: number, y: number, z: number},
+        reapplyGravityEveryMinutes?: number
+    ) {
         super();
         this.emulatorId = emulatorId;
         this.deviceNames = deviceNames;
@@ -43,6 +45,10 @@ export class MumuPlayerEmulator extends Emulator {
 
         if (startupGravity) {
             this.startupGravity = startupGravity;
+        }
+
+        if (reapplyGravityEveryMinutes) {
+            this.reapplyGravityEveryMinutes = reapplyGravityEveryMinutes;
         }
     }
 

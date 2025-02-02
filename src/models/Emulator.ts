@@ -38,6 +38,10 @@ export class Emulator {
 
     gravityCommandFormat?: string;
 
+    reapplyGravityEveryMinutes?: number;
+
+    lastAppliedGravity?: Date;
+
     getAdbPath(): string {
         return '';
     }

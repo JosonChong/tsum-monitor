@@ -950,15 +950,29 @@
                         
                         <div class="startup-gravity-controls" style="display: none;">
                             <label class="form-label">Startup Gravity Values</label>
-                            <div class="row g-2">
+                            <div class="row g-2 mb-3">
                                 <div class="col-4">
-                                    <input type="number" class="form-control bg-dark text-light config-gravity-x" placeholder="X">
+                                    <input type="number" class="form-control bg-dark text-light config-gravity-x" placeholder="X (required)">
                                 </div>
                                 <div class="col-4">
-                                    <input type="number" class="form-control bg-dark text-light config-gravity-y" placeholder="Y">
+                                    <input type="number" class="form-control bg-dark text-light config-gravity-y" placeholder="Y (required)">
                                 </div>
                                 <div class="col-4">
                                     <input type="number" class="form-control bg-dark text-light config-gravity-z" placeholder="Z">
+                                </div>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input config-enable-reapply-gravity">
+                                <label class="form-check-label">Reapply Gravity automatically</label>
+                            </div>
+                            <div class="reapply-gravity-interval ms-4" style="display: none;">
+                                <div class="d-flex align-items-center">
+                                    <span class="me-2">Every</span>
+                                    <div class="input-group" style="width: 120px;">
+                                        <input type="number" class="form-control bg-dark text-light config-reapply-gravity-minutes" placeholder="Minutes">
+                                    </div>
+                                    
+                                    <span class="me-2">minutes</span>
                                 </div>
                             </div>
                         </div>
@@ -1387,6 +1401,7 @@
                     accountDiv.querySelector('.config-emulator-type').value = account.emulator.type || 'Ld';
                     accountDiv.querySelector('.config-install-path').value = account.emulator.installPath || '';
                     accountDiv.querySelector('.config-emulator-name').value = account.emulator.emulatorName || '';
+                    accountDiv.querySelector('.config-emulator-id').value = account.emulator.emulatorId || '';
                     accountDiv.querySelector('.config-add-start-robotmon-script').checked = account.emulator.addStartRobotmonScript || false;
                     
                     // Set up device names if they exist in the config
@@ -1407,6 +1422,8 @@
                     if (account.emulator.startupGravity) {
                         const gravityToggle = accountDiv.querySelector('.config-enable-startup-gravity');
                         const gravityControls = accountDiv.querySelector('.startup-gravity-controls');
+                        const reapplyGravityToggle = accountDiv.querySelector('.config-enable-reapply-gravity');
+                        const reapplyGravityInterval = accountDiv.querySelector('.reapply-gravity-interval');
                         
                         // Enable gravity and show controls
                         gravityToggle.checked = true;
@@ -1416,6 +1433,13 @@
                         accountDiv.querySelector('.config-gravity-x').value = account.emulator.startupGravity.x;
                         accountDiv.querySelector('.config-gravity-y').value = account.emulator.startupGravity.y;
                         accountDiv.querySelector('.config-gravity-z').value = account.emulator.startupGravity.z;
+
+                        // Set reapply gravity settings if they exist
+                        if (account.emulator.reapplyGravityEveryMinutes) {
+                            reapplyGravityToggle.checked = true;
+                            reapplyGravityInterval.style.display = 'block';
+                            accountDiv.querySelector('.config-reapply-gravity-minutes').value = account.emulator.reapplyGravityEveryMinutes;
+                        }
                     }
                 }
             } else {
@@ -1431,6 +1455,13 @@
             const gravityControls = accountDiv.querySelector('.startup-gravity-controls');
             gravityToggle.addEventListener('change', (e) => {
                 gravityControls.style.display = e.target.checked ? 'block' : 'none';
+            });
+
+            // Set up reapply gravity toggle listener
+            const reapplyGravityToggle = accountDiv.querySelector('.config-enable-reapply-gravity');
+            const reapplyGravityInterval = accountDiv.querySelector('.reapply-gravity-interval');
+            reapplyGravityToggle.addEventListener('change', (e) => {
+                reapplyGravityInterval.style.display = e.target.checked ? 'block' : 'none';
             });
         }
 
@@ -1546,11 +1577,13 @@
                     type: emulatorType,
                     installPath: installPath,
                     emulatorName: emulatorName,
+                    emulatorId: emulatorId,
                     addStartRobotmonScript: addStartRobotmonScript
                 };
 
                 if (deviceNames.length > 0) emulatorConfig.deviceNames = deviceNames;
                 
+                let reapplyGravityEveryMinutes = undefined;
                 // Check if gravity is enabled and has required values
                 if (enableStartupGravity && (gravityX || gravityX === 0) && (gravityY || gravityY === 0)) {
                     emulatorConfig.startupGravity = {
@@ -1558,6 +1591,15 @@
                         y: gravityY,
                         z: gravityZ
                     };
+                    
+                    // Add reapply gravity settings if enabled
+                    const reapplyGravityEnabled = accountDiv.querySelector('.config-enable-reapply-gravity').checked;
+                    if (reapplyGravityEnabled) {
+                        const reapplyMinutes = parseInt(accountDiv.querySelector('.config-reapply-gravity-minutes').value);
+                        if (reapplyMinutes > 0) {
+                            emulatorConfig.reapplyGravityEveryMinutes = reapplyMinutes;
+                        }
+                    }
                 } else {
                     emulatorConfig.startupGravity = undefined;
                 }
