@@ -28,7 +28,7 @@ export class Account {
 
     maxGameRestarts: number = 3;
 
-    maxEmulatorRestarts: number = 3;
+    maxEmulatorRestarts: number = 5;
 
     constructor(accountName: string, discordUserId?: string, emulator?: Emulator, deathThreshold?: number, maxGameRestarts?: number, maxEmulatorRestarts?: number) {
         this.accountName = accountName;
