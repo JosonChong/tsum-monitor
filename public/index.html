@@ -1414,7 +1414,7 @@
                             </div>
                         `).join('');
                     } else {
-                        // If no device names in config, set defaults based on emulator type
+                        // Only set defaults if no device names exist in config
                         updateEmulatorFields(accountDiv.querySelector('.config-emulator-type'));
                     }
                     
@@ -1447,8 +1447,15 @@
                 updateEmulatorFields(accountDiv.querySelector('.config-emulator-type'));
             }
 
-            // Update emulator fields based on selected type
-            updateEmulatorFields(accountDiv.querySelector('.config-emulator-type'));
+            // Only add emulator field change listener, don't immediately call updateEmulatorFields
+            const emulatorTypeSelect = accountDiv.querySelector('.config-emulator-type');
+            emulatorTypeSelect.addEventListener('change', function() {
+                // Only update device names if there are none currently
+                const deviceNamesContainer = accountDiv.querySelector('.device-names-container');
+                if (!deviceNamesContainer.children.length) {
+                    updateEmulatorFields(this);
+                }
+            });
 
             // Set up gravity toggle listener
             const gravityToggle = accountDiv.querySelector('.config-enable-startup-gravity');
@@ -1480,29 +1487,14 @@
                 ldFields.forEach(field => field.style.display = 'none');
                 installPathInput.placeholder = 'C:/Program Files/MuMu Player 12';
                 
-                const deviceNameHtml = `
-                    <div class="input-group mb-2">
-                        <input type="text" class="form-control bg-dark text-light config-device-name" value="127.0.0.1:16416">
-                        <button class="btn btn-outline-danger" type="button" onclick="removeDeviceName(this)">Remove</button>
-                    </div>
-                `;
-                deviceNamesContainer.innerHTML = deviceNameHtml;
+                addDeviceNameField(selectElement, '127.0.0.1:16416');
             } else {
                 mumuFields.forEach(field => field.style.display = 'none');
                 ldFields.forEach(field => field.style.display = 'block');
                 installPathInput.placeholder = 'C:/LDPlayer/LDPlayer64';
                 
-                const deviceNamesHtml = `
-                    <div class="input-group mb-2">
-                        <input type="text" class="form-control bg-dark text-light config-device-name" value="127.0.0.1:5555">
-                        <button class="btn btn-outline-danger" type="button" onclick="removeDeviceName(this)">Remove</button>
-                    </div>
-                    <div class="input-group mb-2">
-                        <input type="text" class="form-control bg-dark text-light config-device-name" value="emulator-5554">
-                        <button class="btn btn-outline-danger" type="button" onclick="removeDeviceName(this)">Remove</button>
-                    </div>
-                `;
-                deviceNamesContainer.innerHTML = deviceNamesHtml;
+                addDeviceNameField(selectElement, '127.0.0.1:5555');
+                addDeviceNameField(selectElement, 'emulator-5554');
             }
         }
 
@@ -1516,11 +1508,12 @@
 
         function addDeviceNameField(button, value = '') {
             const container = button.closest('.account-config').querySelector('.device-names-container');
-            const template = document.getElementById('deviceNameTemplate');
-            const deviceNameElement = template.content.cloneNode(true);
-            
-            const input = deviceNameElement.querySelector('.config-device-name');
-            input.value = value;
+            const deviceNameElement = document.createElement('div');
+            deviceNameElement.className = 'input-group mb-2';
+            deviceNameElement.innerHTML = `
+                <input type="text" class="form-control bg-dark text-light config-device-name" value="${value}">
+                <button class="btn btn-outline-danger" type="button" onclick="removeDeviceName(this)">Remove</button>
+            `;
             
             container.appendChild(deviceNameElement);
         }
@@ -1583,7 +1576,6 @@
 
                 if (deviceNames.length > 0) emulatorConfig.deviceNames = deviceNames;
                 
-                let reapplyGravityEveryMinutes = undefined;
                 // Check if gravity is enabled and has required values
                 if (enableStartupGravity && (gravityX || gravityX === 0) && (gravityY || gravityY === 0)) {
                     emulatorConfig.startupGravity = {
@@ -1600,10 +1592,8 @@
                             emulatorConfig.reapplyGravityEveryMinutes = reapplyMinutes;
                         }
                     }
-                } else {
-                    emulatorConfig.startupGravity = undefined;
                 }
-                
+
                 // Add emulator object if it has properties beyond type
                 if (Object.keys(emulatorConfig).length > 0) {
                     account.emulator = emulatorConfig;
