@@ -161,13 +161,31 @@
             border-top: 1px solid #444;
         }
 
-        .status-badge {
+        .status-badge-container {
             display: inline-block;
-            margin-bottom: 0.2rem;
-            white-space: nowrap;
-            width: auto;
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
+            width: 120px;
+            height: 48px;
+        }
+
+        .status-badge {
+            display: flex;
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            padding: 0.25rem 1rem;
+            border-radius: 24px;
+            text-align: center;
+            line-height: 1.2;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+        }
+
+        .status-badge::before {
+            content: '\200B';  /* Zero-width space */
+            display: block;
+            height: 0;
+            width: 100%;
         }
 
         .status-online {
@@ -243,6 +261,7 @@
             --bs-btn-active-color: #fff;
             --bs-btn-active-bg: #6c757d;
             --bs-btn-active-border-color: #6c757d;
+            min-width: 90px;  /* Set minimum width to accommodate both "Pause" and "Resume" */
         }
 
         /* Adjust table column widths */
@@ -323,9 +342,28 @@
             }
 
             /* Make status badge more compact */
+            .status-badge-container {
+                width: 100%;
+                max-width: 180px;    /* Increased max-width for longer status text */
+            }
+            
             .status-badge {
-                padding: 0.15rem 0.3rem;
-                font-size: 0.75rem;
+                font-size: 0.85rem;  /* Slightly smaller font */
+                padding: 0.25rem 0.75rem;  /* Adjusted padding */
+                min-height: 52px;    /* Ensure enough height for two lines */
+                white-space: normal; /* Allow text wrapping */
+                word-break: break-word; /* Break long words if needed */
+                line-height: 1.3;    /* Slightly increased line height for better readability */
+            }
+
+            .status-cell {
+                height: auto;
+                min-height: 70px;    /* Increased minimum height */
+                padding: 8px 4px;
+            }
+            
+            .status-content {
+                gap: 6px;
             }
         }
 
@@ -584,25 +622,32 @@
         }
 
         .status-badge {
-            display: inline-block;
+            display: inline-flex;
             margin-bottom: 0.2rem;
-            white-space: nowrap;
-            width: auto;
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
+            white-space: normal;
+            min-width: 90px;      /* Changed back to min-width */
+            width: auto;          /* Allow natural width */
+            height: 48px;         /* Keep fixed height */
+            padding: 0.25rem 1rem; /* Slightly increased horizontal padding */
+            border-radius: 24px;   /* Increased border radius to match height */
             text-align: center;
+            line-height: 1.2;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
         }
 
-        .text-muted {
-            font-size: 0.75rem;
-            opacity: 0.8;
-            display: block;
-            line-height: 1;
-            text-align: center;
+        .status-content {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;        /* Increased gap between status and timestamp */
         }
 
-        .d-flex.flex-column.align-items-center {
-            gap: 0.2rem;
+        .status-content small.text-muted {
+            font-size: 0.875rem;  /* Larger text size for timestamp */
         }
 
         .status-restarting {
@@ -696,10 +741,117 @@
         .modal-backdrop.show {
             opacity: 0.5;
         }
+
+        /* Add these styles for better visibility */
+        .form-control:focus, .form-select:focus {
+            background-color: #2b3035;
+            color: #fff;
+            border-color: #565e64;
+            box-shadow: 0 0 0 0.25rem rgba(255,255,255,0.25);
+        }
+        
+        .form-control::placeholder {
+            color: #6c757d;
+        }
+        
+        .form-check-input:checked {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+        
+        .modal-content {
+            border: 1px solid #444;
+        }
+        
+        .card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+
+        /* Add this style for required field asterisk */
+        .text-danger {
+            color: #dc3545 !important;
+        }
+
+        .form-control.bg-dark {
+            background-color: #2b2b2b !important;
+            border-color: #444;
+            color: #e0e0e0;
+        }
+
+        .form-control.bg-dark:focus {
+            background-color: #333 !important;
+            border-color: #666;
+            color: #ffffff;
+            box-shadow: 0 0 0 0.25rem rgba(66, 70, 73, 0.5);
+        }
+
+        .form-label {
+            color: #e0e0e0;
+        }
+
+        /* New styles for the status cell */
+        .status-cell {
+            height: 80px;        /* Fixed height for the entire cell */
+            min-height: 80px;    /* Ensure minimum height */
+        }
+
+        .status-content {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;            /* Consistent spacing between badge and timestamp */
+        }
+
+        /* Add mobile styles */
+        @media (max-width: 768px) {
+            .status-badge-container {
+                width: 100%;      /* Full width on mobile */
+                max-width: 160px; /* Maximum width to prevent too wide badges */
+            }
+            
+            .status-cell {
+                height: auto;     /* Allow height to adjust */
+                min-height: 60px; /* Smaller minimum height */
+                padding: 8px 4px; /* Add some padding */
+            }
+            
+            .status-content {
+                gap: 6px;    /* Slightly smaller gap on mobile but still noticeable */
+            }
+            
+            .status-content small.text-muted {
+                font-size: 0.8rem;  /* Slightly smaller on mobile but still readable */
+            }
+        }
+
+        .status-badge i {
+            margin-right: 6px;  /* Add space after the icon */
+        }
+
+        /* For RTL (right-to-left) language support if needed */
+        [dir="rtl"] .status-badge i {
+            margin-right: 0;
+            margin-left: 6px;
+        }
+
+        /* If you want to specifically target just the pause/resume button */
+        button[onclick*="togglePause"] {
+            min-width: 90px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;        /* Space between icon and text */
+        }
     </style>
 </head>
 <body>
     <div class="container-fluid px-4 my-5" style="max-width: 100% !important;">
+        <!-- Add this button near the top of the page, perhaps in the header area -->
+        <div class="mb-3">
+            <button class="btn btn-primary" onclick="showServerConfigModal()">Edit Server Config</button>
+        </div>
         <!-- Accounts Section -->
         <div class="card mb-4" style="max-width: 100% !important;">
             <div class="card-body p-0">
@@ -767,6 +919,180 @@
         </div>
     </div>
 
+    <!-- Update the server config modal -->
+    <div class="modal fade" id="serverConfigModal" tabindex="-1" aria-labelledby="serverConfigModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content bg-dark text-light">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="serverConfigModalLabel">Edit Server Configuration</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-4">
+                        <h5>Server Settings</h5>
+                        <div class="mb-3">
+                            <label for="serverPort" class="form-label">Server Port</label>
+                            <input type="number" class="form-control bg-dark text-light" id="serverPort" placeholder="3000">
+                        </div>
+                        <div class="mb-3">
+                            <label for="discordBotToken" class="form-label">Discord Bot Token (optional)</label>
+                            <input type="password" class="form-control bg-dark text-light" id="discordBotToken" placeholder="Enter Discord bot token">
+                        </div>
+                    </div>
+                    <hr class="border-secondary mb-4">
+                    <div id="accountsList">
+                        <!-- Accounts will be dynamically added here -->
+                    </div>
+                    <button type="button" class="btn btn-success mt-3" onclick="addNewAccount()">
+                        <i class="bi bi-plus-circle"></i> Add Account
+                    </button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="submitServerConfigChange()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add account template (hidden) -->
+    <template id="accountTemplate">
+        <div class="account-config card bg-dark mb-3 border-secondary">
+            <div class="card-header d-flex justify-content-between align-items-center border-secondary">
+                <h6 class="mb-0 text-light">Account Configuration</h6>
+                <button type="button" class="btn btn-danger btn-sm" onclick="removeAccount(this)">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+            <div class="card-body text-light">
+                <!-- Account Basic Settings -->
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Account Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control bg-dark text-light border-secondary config-account-name">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Discord User ID</label>
+                        <input type="text" class="form-control bg-dark text-light border-secondary config-discord-id">
+                    </div>
+                </div>
+
+                <!-- Game Settings -->
+                <div class="game-config mb-4">
+                    <h6 class="mb-3">Game Settings</h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Death Threshold</label>
+                            <input type="number" class="form-control bg-dark text-light border-secondary config-death-threshold" 
+                                   placeholder="15 mins">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Max Game Restarts</label>
+                            <input type="number" class="form-control bg-dark text-light border-secondary config-max-game-restarts" 
+                                   placeholder="3">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Max Emulator Restarts</label>
+                            <input type="number" class="form-control bg-dark text-light border-secondary config-max-emulator-restarts" 
+                                   placeholder="5">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Emulator Settings -->
+                <div class="emulator-config mb-4">
+                    <h6 class="mb-3">Emulator Configuration</h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Type <span class="text-danger">*</span></label>
+                            <select class="form-select bg-dark text-light border-secondary config-emulator-type" onchange="updateEmulatorFields(this)">
+                                <option value="Ld">LDPlayer</option>
+                                <option value="Mumu">MuMu Player</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Install Path</label>
+                            <input type="text" class="form-control bg-dark text-light border-secondary config-install-path" placeholder="C:/LDPlayer/LDPlayer64">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3 ld-field">
+                            <label class="form-label">Emulator Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control bg-dark text-light border-secondary config-emulator-name">
+                        </div>
+                        <div class="col-md-6 mb-3 mumu-field" style="display: none;">
+                            <label class="form-label">Emulator ID <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control bg-dark text-light border-secondary config-emulator-id">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <label class="form-label">Device Names</label>
+                            <div class="device-names-container">
+                                <!-- Device name fields will be added here dynamically -->
+                            </div>
+                            <button type="button" class="btn btn-outline-primary btn-sm mt-2" onclick="addDeviceNameField(this)">
+                                <i class="bi bi-plus-circle"></i> Add Device Name
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check mb-2">
+                            <input type="checkbox" class="form-check-input config-add-start-robotmon-script">
+                            <label class="form-check-label">Add Start Robotmon Script</label>
+                        </div>
+                        
+                        <div class="form-check mb-2">
+                            <input type="checkbox" class="form-check-input config-enable-startup-gravity">
+                            <label class="form-check-label">Enable Startup Gravity</label>
+                        </div>
+                        
+                        <div class="startup-gravity-controls" style="display: none;">
+                            <label class="form-label">Startup Gravity Values</label>
+                            <div class="row g-2 mb-3">
+                                <div class="col-4">
+                                    <input type="number" class="form-control bg-dark text-light config-gravity-x" placeholder="X (required)">
+                                </div>
+                                <div class="col-4">
+                                    <input type="number" class="form-control bg-dark text-light config-gravity-y" placeholder="Y (required)">
+                                </div>
+                                <div class="col-4">
+                                    <input type="number" class="form-control bg-dark text-light config-gravity-z" placeholder="Z">
+                                </div>
+                            </div>
+                            <div class="form-check mb-2">
+                                <input type="checkbox" class="form-check-input config-enable-reapply-gravity">
+                                <label class="form-check-label">Reapply Gravity automatically</label>
+                            </div>
+                            <div class="reapply-gravity-interval ms-4" style="display: none;">
+                                <div class="d-flex align-items-center">
+                                    <span class="me-2">Every</span>
+                                    <div class="input-group" style="width: 120px;">
+                                        <input type="number" class="form-control bg-dark text-light config-reapply-gravity-minutes" placeholder="Minutes">
+                                    </div>
+                                    
+                                    <span class="me-2">minutes</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Add this template for device name fields -->
+    <template id="deviceNameTemplate">
+        <div class="input-group mb-2">
+            <input type="text" class="form-control bg-dark text-light border-secondary config-device-name">
+            <button class="btn btn-outline-danger" type="button" onclick="removeDeviceName(this)">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+    </template>
+
     <script 
         src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" 
         integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" 
@@ -777,6 +1103,7 @@
         const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const ws = new WebSocket(`${wsProtocol}//${window.location.host}`);
         const logsContainer = document.getElementById('logs');
+        let currentConfig = null;
 
         function getTimeAgo(timestamp) {
             const now = new Date();
@@ -839,6 +1166,11 @@
             } else if (data.type === 'accountUpdate') {
                 // Single account update
                 updateSingleAccount(data.data);
+            } else if (data.type === 'configData') {
+                document.getElementById('configText').value = data.data;
+            } else if (data.type === 'serverConfigData') {
+                const config = JSON.parse(data.data);
+                updateVisualEditor(config);
             }
         };
 
@@ -880,12 +1212,14 @@
                     <td class="align-middle">
                         ${account.emulator}
                     </td>
-                    <td class="align-middle">
-                        <div class="d-flex flex-column align-items-center">
-                            <span class="status-badge ${getStatusClass(account.status)}">
-                                <i class="bi ${getStatusIcon(account.status)}"></i>
-                                ${account.status}
-                            </span>
+                    <td class="align-middle status-cell">
+                        <div class="status-content">
+                            <div class="status-badge-container">
+                                <span class="status-badge ${getStatusClass(account.status)}">
+                                    <i class="bi ${getStatusIcon(account.status)}"></i>
+                                    ${account.status}
+                                </span>
+                            </div>
                             ${account.lastUpdate ? `<small class="text-muted" data-timestamp="${account.lastUpdate}">${getTimeAgo(account.lastUpdate)}</small>` : ''}
                         </div>
                     </td>
@@ -923,7 +1257,7 @@
                                                 <button class="btn btn-sm btn-outline-primary w-100" onclick="performAction('restartEmulator', '${account.name}')">Restart Emulator</button>
                                             </td>
                                             <td>
-                                                <button class="btn btn-sm btn-outline-primary w-100" onclick="showGravityModal('${account.name}', ${account.defaultGravity?.x}, ${account.defaultGravity?.y}, ${account.defaultGravity?.z})">Change Gravity</button>
+                                                <button class="btn btn-sm btn-outline-primary w-100" onclick="showGravityModal('${account.name}', ${account.startupGravity?.x}, ${account.startupGravity?.y}, ${account.startupGravity?.z})">Change Gravity</button>
                                             </td>
                                         </tr>
                                     </tbody>
@@ -937,7 +1271,7 @@
                                 <button class="btn btn-sm btn-outline-primary w-100 mb-1" onclick="performAction('minimizeEmulator', '${account.name}')">Minimize</button>
                                 <button class="btn btn-sm btn-outline-primary w-100 mb-1" onclick="performAction('restoreEmulator', '${account.name}')">Restore</button>
                                 <button class="btn btn-sm btn-outline-primary w-100 mb-1" onclick="performAction('startService', '${account.name}')">Start Service</button>
-                                <button class="btn btn-sm btn-outline-primary w-100 mb-1" onclick="showGravityModal('${account.name}', ${account.defaultGravity?.x}, ${account.defaultGravity?.y}, ${account.defaultGravity?.z})">Change Gravity</button>
+                                <button class="btn btn-sm btn-outline-primary w-100 mb-1" onclick="showGravityModal('${account.name}', ${account.startupGravity?.x}, ${account.startupGravity?.y}, ${account.startupGravity?.z})">Change Gravity</button>
                             </div>
                         </div>
                     </td>
@@ -972,11 +1306,13 @@
                     const statusCell = row.cells[2];
                     if (statusCell) {
                         statusCell.innerHTML = `
-                            <div class="d-flex flex-column align-items-center">
-                                <span class="status-badge ${getStatusClass(accountData.status)}">
-                                    <i class="bi ${getStatusIcon(accountData.status)}"></i>
-                                    ${accountData.status}
-                                </span>
+                            <div class="status-content">
+                                <div class="status-badge-container">
+                                    <span class="status-badge ${getStatusClass(accountData.status)}">
+                                        <i class="bi ${getStatusIcon(accountData.status)}"></i>
+                                        ${accountData.status}
+                                    </span>
+                                </div>
                                 ${accountData.lastUpdate ? `<small class="text-muted" data-timestamp="${accountData.lastUpdate}">${getTimeAgo(accountData.lastUpdate)}</small>` : ''}
                             </div>
                         `;
@@ -1054,6 +1390,7 @@
         }
 
         function showGravityModal(accountName, defaultGravityX, defaultGravityY, defaultGravityZ) {
+            console.log(defaultGravityY);
             try {
                 const modalElement = document.getElementById('gravityModal');
                 if (!modalElement) {
@@ -1104,6 +1441,302 @@
 
             // Close the modal
             bootstrap.Modal.getInstance(document.getElementById('gravityModal')).hide();
+        }
+
+        function showServerConfigModal() {
+            try {
+                const modalElement = document.getElementById('serverConfigModal');
+                if (!modalElement) {
+                    console.error('Modal element not found');
+                    return;
+                }
+                
+                // Request current server config
+                ws.send(JSON.stringify({
+                    type: 'command',
+                    data: {
+                        command: 'getServerConfig'
+                    }
+                }));
+                
+                // Show the modal
+                const modal = new bootstrap.Modal(modalElement);
+                modal.show();
+            } catch (error) {
+                console.error('Error showing server config modal:', error);
+            }
+        }
+
+        function updateVisualEditor(config) {
+            currentConfig = config;
+            
+            // Update server settings
+            document.getElementById('serverPort').value = config.serverPort || '';
+            document.getElementById('discordBotToken').value = config.discordBotToken || '';
+            
+            const accountsList = document.getElementById('accountsList');
+            accountsList.innerHTML = '';
+            
+            config.accounts.forEach(account => {
+                addAccountToVisualEditor(account);
+            });
+        }
+
+        function addAccountToVisualEditor(account = null) {
+            const template = document.getElementById('accountTemplate');
+            const accountElement = template.content.cloneNode(true);
+            const accountDiv = accountElement.querySelector('.account-config');
+            
+            // Add to the accounts list first so we have it in the DOM
+            const accountsList = document.getElementById('accountsList');
+            accountsList.appendChild(accountDiv);
+            
+            // Set default value for Add Start Robotmon Script to true
+            accountDiv.querySelector('.config-add-start-robotmon-script').checked = true;
+            
+            // Fill in values if account data is provided
+            if (account) {
+                accountDiv.querySelector('.config-account-name').value = account.account || '';
+                accountDiv.querySelector('.config-discord-id').value = account.discordUserId || '';
+                accountDiv.querySelector('.config-death-threshold').value = account.deathThreshold || '';
+                accountDiv.querySelector('.config-max-game-restarts').value = account.maxGameRestarts || '';
+                accountDiv.querySelector('.config-max-emulator-restarts').value = account.maxEmulatorRestarts || '';
+                
+                if (account.emulator) {
+                    accountDiv.querySelector('.config-emulator-type').value = account.emulator.type || 'Ld';
+                    accountDiv.querySelector('.config-install-path').value = account.emulator.installPath || '';
+                    accountDiv.querySelector('.config-emulator-name').value = account.emulator.emulatorName || '';
+                    accountDiv.querySelector('.config-emulator-id').value = account.emulator.emulatorId || '';
+                    accountDiv.querySelector('.config-add-start-robotmon-script').checked = account.emulator.addStartRobotmonScript || false;
+                    
+                    // Set up device names if they exist in the config
+                    const deviceNamesContainer = accountDiv.querySelector('.device-names-container');
+                    if (account.emulator.deviceNames && account.emulator.deviceNames.length > 0) {
+                        deviceNamesContainer.innerHTML = account.emulator.deviceNames.map(deviceName => `
+                            <div class="input-group mb-2">
+                                <input type="text" class="form-control bg-dark text-light config-device-name" value="${deviceName}">
+                                <button class="btn btn-outline-danger" type="button" onclick="removeDeviceName(this)">Remove</button>
+                            </div>
+                        `).join('');
+                    } else {
+                        // Only set defaults if no device names exist in config
+                        updateEmulatorFields(accountDiv.querySelector('.config-emulator-type'), false);
+                    }
+                    
+                    // Set up gravity settings if they exist
+                    if (account.emulator.startupGravity) {
+                        const gravityToggle = accountDiv.querySelector('.config-enable-startup-gravity');
+                        const gravityControls = accountDiv.querySelector('.startup-gravity-controls');
+                        const reapplyGravityToggle = accountDiv.querySelector('.config-enable-reapply-gravity');
+                        const reapplyGravityInterval = accountDiv.querySelector('.reapply-gravity-interval');
+                        
+                        // Enable gravity and show controls
+                        gravityToggle.checked = true;
+                        gravityControls.style.display = 'block';
+                        
+                        // Set gravity values
+                        accountDiv.querySelector('.config-gravity-x').value = account.emulator.startupGravity.x;
+                        accountDiv.querySelector('.config-gravity-y').value = account.emulator.startupGravity.y;
+                        accountDiv.querySelector('.config-gravity-z').value = account.emulator.startupGravity.z;
+
+                        // Set reapply gravity settings if they exist
+                        if (account.emulator.reapplyGravityEveryMinutes) {
+                            reapplyGravityToggle.checked = true;
+                            reapplyGravityInterval.style.display = 'block';
+                            accountDiv.querySelector('.config-reapply-gravity-minutes').value = account.emulator.reapplyGravityEveryMinutes;
+                        }
+                    }
+                }
+            } else {
+                // For new accounts, set default device names based on emulator type
+                updateEmulatorFields(accountDiv.querySelector('.config-emulator-type'), true);
+            }
+
+            // Only add emulator field change listener, don't immediately call updateEmulatorFields
+            const emulatorTypeSelect = accountDiv.querySelector('.config-emulator-type');
+            emulatorTypeSelect.addEventListener('change', function() {
+                // Only update device names if there are none currently
+                const deviceNamesContainer = accountDiv.querySelector('.device-names-container');
+                if (!deviceNamesContainer.children.length) {
+                    updateEmulatorFields(this, true);
+                }
+            });
+
+            // Set up gravity toggle listener
+            const gravityToggle = accountDiv.querySelector('.config-enable-startup-gravity');
+            const gravityControls = accountDiv.querySelector('.startup-gravity-controls');
+            gravityToggle.addEventListener('change', (e) => {
+                gravityControls.style.display = e.target.checked ? 'block' : 'none';
+            });
+
+            // Set up reapply gravity toggle listener
+            const reapplyGravityToggle = accountDiv.querySelector('.config-enable-reapply-gravity');
+            const reapplyGravityInterval = accountDiv.querySelector('.reapply-gravity-interval');
+            reapplyGravityToggle.addEventListener('change', (e) => {
+                reapplyGravityInterval.style.display = e.target.checked ? 'block' : 'none';
+            });
+        }
+
+        function updateEmulatorFields(selectElement, isNewAccount = false) {
+            const accountDiv = selectElement.closest('.account-config');
+            const mumuFields = accountDiv.querySelectorAll('.mumu-field');
+            const ldFields = accountDiv.querySelectorAll('.ld-field');
+            const installPathInput = accountDiv.querySelector('.config-install-path');
+            const deviceNamesContainer = accountDiv.querySelector('.device-names-container');
+            
+            if (selectElement.value === 'Mumu') {
+                mumuFields.forEach(field => field.style.display = 'block');
+                ldFields.forEach(field => field.style.display = 'block');
+                installPathInput.placeholder = 'C:/Program Files/MuMu Player 12';
+                
+                // Add default device names if this is a new account or user changed type
+                if (selectElement.matches(':focus') || isNewAccount) {
+                    deviceNamesContainer.innerHTML = '';
+                    addDeviceNameField(selectElement, '127.0.0.1:16416');
+                }
+            } else {
+                mumuFields.forEach(field => field.style.display = 'none');
+                ldFields.forEach(field => field.style.display = 'block');
+                installPathInput.placeholder = 'C:/LDPlayer/LDPlayer64';
+                
+                // Add default device names if this is a new account or user changed type
+                if (selectElement.matches(':focus') || isNewAccount) {
+                    deviceNamesContainer.innerHTML = '';
+                    addDeviceNameField(selectElement, '127.0.0.1:5555');
+                    addDeviceNameField(selectElement, 'emulator-5554');
+                }
+            }
+        }
+
+        function addNewAccount() {
+            addAccountToVisualEditor();
+        }
+
+        function removeAccount(button) {
+            button.closest('.account-config').remove();
+        }
+
+        function addDeviceNameField(button, value = '') {
+            const container = button.closest('.account-config').querySelector('.device-names-container');
+            const deviceNameElement = document.createElement('div');
+            deviceNameElement.className = 'input-group mb-2';
+            deviceNameElement.innerHTML = `
+                <input type="text" class="form-control bg-dark text-light config-device-name" value="${value}">
+                <button class="btn btn-outline-danger" type="button" onclick="removeDeviceName(this)">Remove</button>
+            `;
+            
+            container.appendChild(deviceNameElement);
+        }
+
+        function removeDeviceName(button) {
+            button.closest('.input-group').remove();
+        }
+
+        function getConfigFromVisualEditor() {
+            const serverPort = parseInt(document.getElementById('serverPort').value) || 3000;
+            const discordBotToken = document.getElementById('discordBotToken').value.trim();
+            
+            const accounts = [];
+            document.querySelectorAll('.account-config').forEach(accountDiv => {
+                // Get all values and trim them
+                const accountName = accountDiv.querySelector('.config-account-name').value.trim();
+                const discordUserId = accountDiv.querySelector('.config-discord-id').value.trim();
+                const deathThreshold = accountDiv.querySelector('.config-death-threshold').value.trim();
+                const maxGameRestarts = accountDiv.querySelector('.config-max-game-restarts').value.trim();
+                const maxEmulatorRestarts = accountDiv.querySelector('.config-max-emulator-restarts').value.trim();
+                
+                // Get emulator values
+                const emulatorType = accountDiv.querySelector('.config-emulator-type').value;
+                const installPath = accountDiv.querySelector('.config-install-path').value.trim();
+                const emulatorName = accountDiv.querySelector('.config-emulator-name').value.trim();
+                const emulatorId = accountDiv.querySelector('.config-emulator-id')?.value.trim();
+                
+                // Get gravity values
+                const gravityX = parseFloat(accountDiv.querySelector('.config-gravity-x').value);
+                const gravityY = parseFloat(accountDiv.querySelector('.config-gravity-y').value);
+                const gravityZ = parseFloat(accountDiv.querySelector('.config-gravity-z').value) || 0;
+                const addStartRobotmonScript = accountDiv.querySelector('.config-add-start-robotmon-script')?.checked || false;
+                const enableStartupGravity = accountDiv.querySelector('.config-enable-startup-gravity')?.checked || false;
+
+                // Get device names
+                const deviceNames = Array.from(accountDiv.querySelectorAll('.config-device-name'))
+                    .map(input => input.value.trim())
+                    .filter(name => name);
+
+                // Skip if required fields are empty
+                if (!accountName) return;
+
+                // Build the account object with only non-empty values
+                const account = {
+                    account: accountName
+                };
+
+                if (discordUserId) account.discordUserId = discordUserId;
+                if (deathThreshold) account.deathThreshold = parseInt(deathThreshold);
+                if (maxGameRestarts) account.maxGameRestarts = parseInt(maxGameRestarts);
+                if (maxEmulatorRestarts) account.maxEmulatorRestarts = parseInt(maxEmulatorRestarts);
+
+                const emulatorConfig = {
+                    type: emulatorType,
+                    installPath: installPath,
+                    emulatorName: emulatorName,
+                    emulatorId: emulatorId,
+                    addStartRobotmonScript: addStartRobotmonScript
+                };
+
+                if (deviceNames.length > 0) emulatorConfig.deviceNames = deviceNames;
+                
+                // Check if gravity is enabled and has required values
+                if (enableStartupGravity && (gravityX || gravityX === 0) && (gravityY || gravityY === 0)) {
+                    emulatorConfig.startupGravity = {
+                        x: gravityX,
+                        y: gravityY,
+                        z: gravityZ
+                    };
+                    
+                    // Add reapply gravity settings if enabled
+                    const reapplyGravityEnabled = accountDiv.querySelector('.config-enable-reapply-gravity').checked;
+                    if (reapplyGravityEnabled) {
+                        const reapplyMinutes = parseInt(accountDiv.querySelector('.config-reapply-gravity-minutes').value);
+                        if (reapplyMinutes > 0) {
+                            emulatorConfig.reapplyGravityEveryMinutes = reapplyMinutes;
+                        }
+                    }
+                }
+
+                // Add emulator object if it has properties beyond type
+                if (Object.keys(emulatorConfig).length > 0) {
+                    account.emulator = emulatorConfig;
+                }
+
+                accounts.push(account);
+            });
+            
+            const config = {
+                serverPort: serverPort,
+                accounts: accounts.filter(a => a)
+            };
+
+            // Only add Discord token if it's not empty
+            if (discordBotToken) {
+                config.discordBotToken = discordBotToken;
+            }
+            
+            return config;
+        }
+
+        function submitServerConfigChange() {
+            const config = JSON.stringify(getConfigFromVisualEditor());
+            
+            ws.send(JSON.stringify({
+                type: 'command',
+                data: {
+                    command: 'updateServerConfig',
+                    params: { config }
+                }
+            }));
+
+            bootstrap.Modal.getInstance(document.getElementById('serverConfigModal')).hide();
         }
     </script>
 </body>

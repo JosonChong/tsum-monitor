@@ -14,22 +14,30 @@ export class LdPlayerEmulator extends Emulator {
 
     operationRecordsPath: string = '<installPath>/vms/operationRecords';
 
-    defaultGravity: {} = {x: 0, y: 50, z: 0};
-
     gravityCommandFormat: string = '<installPath>/ldconsole.exe action --name <emulatorName> --key call.gravity --value <x>,<y>,<z>';
 
-    extractGravityFromStartupCommand(startupCommand: string) {
-        const normalizedCommand = startupCommand.replace(/\s+/g, '');
+    extractGravityFromStartupCommand() : {x: number, y: number, z: number} | undefined {
+        const normalizedCommand = this.startupCommand!.replace(/\s+/g, '');
         if (normalizedCommand.includes('call.gravity')) {
             const valueMatch = normalizedCommand.match(/--value([-\d,]+)/);
             if (valueMatch) {
                 const [x, y, z] = valueMatch[1].split(',').map(v => Number(v));
-                this.defaultGravity = {x: x, y: y, z: z};
+                return {x: x, y: y, z: z};
             }
         }   
+
+        return undefined;
     }
 
-    constructor(emulatorName: string, deviceNames: string[], installPath?: string, startupCommand?: string, addStartRobotmonScript?: boolean) {
+    constructor(
+        emulatorName: string, 
+        deviceNames: string[], 
+        installPath?: string, 
+        startupCommand?: string, 
+        addStartRobotmonScript?: boolean,
+        startupGravity?: {x: number, y: number, z: number},
+        reapplyGravityEveryMinutes?: number
+    ) {
         super();
         this.emulatorName = emulatorName;
         this.deviceNames = deviceNames;
@@ -42,7 +50,7 @@ export class LdPlayerEmulator extends Emulator {
             this.startupCommand = startupCommand;
 
             try {
-                this.extractGravityFromStartupCommand(startupCommand);
+                this.startupGravity = this.extractGravityFromStartupCommand();
             } catch (error) {
                 logError(`Unable to extract gravity from startup command, error: ${error}`);
             }
@@ -50,6 +58,14 @@ export class LdPlayerEmulator extends Emulator {
 
         if (addStartRobotmonScript !== undefined) {
             this.addStartRobotmonScript = addStartRobotmonScript;
+        }
+        
+        if (startupGravity) {
+            this.startupGravity = startupGravity;
+        }
+
+        if (reapplyGravityEveryMinutes) {
+            this.reapplyGravityEveryMinutes = reapplyGravityEveryMinutes;
         }
     }
 

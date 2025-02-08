@@ -2,7 +2,10 @@ import { logError } from "../utils/logUtils";
 import * as path from 'path';
 import * as util from 'util';
 const exec = util.promisify(require('child_process').exec);
-const assetsDir = path.resolve(__dirname, '../../assets');
+// Use process.execPath to get the correct path when packaged with pkg
+const assetsDir = 'pkg' in process
+    ? path.join(path.dirname(process.execPath), 'assets')
+    : path.join(__dirname, '../../assets');
 
 export class Emulator {
 
@@ -12,6 +15,9 @@ export class Emulator {
 
     emulatorName?: string;
 
+    /**
+     * @deprecated Migrating to startupGravity
+     */
     startupCommand?: string;
 
     startGameBeginTime?: Date; 
@@ -26,11 +32,15 @@ export class Emulator {
 
     addStartRobotmonScript: boolean = false;
     
-    defaultGravity?: {}
+    startupGravity?: {x: number, y: number, z: number};
 
     operationRecordsPath?: string;
 
     gravityCommandFormat?: string;
+
+    reapplyGravityEveryMinutes?: number;
+
+    lastAppliedGravity?: Date;
 
     getAdbPath(): string {
         return '';
@@ -126,12 +136,11 @@ export class Emulator {
     async minimizeEmulator() {
         if (!this.emulatorName) {
             logError("Need emualtor name to minimize emulator.");
-
             return;
         }
 
         try {            
-            await exec(`${assetsDir}/windowMode -title "${this.emulatorName}" -mode minimized`);
+            await exec(`"${assetsDir}/windowMode" -title "${this.emulatorName}" -mode minimized`);
         } catch (error) {
             logError(`Unable to minimize emulator, error: ${error}`);
         }
@@ -140,12 +149,11 @@ export class Emulator {
     async restoreEmulator() {
         if (!this.emulatorName) {
             logError("Need emualtor name to restore emulator.");
-
             return;
         }
         
         try {            
-            await exec(`${assetsDir}/windowMode -title "${this.emulatorName}" -mode normal`);
+            await exec(`"${assetsDir}/windowMode" -title "${this.emulatorName}" -mode normal`);
         } catch (error) {
             logError(`Unable to restore emulator, error: ${error}`);
         }

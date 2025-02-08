@@ -1,4 +1,4 @@
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import { inMemoryLogs, log, logError } from "./utils/logUtils";
 import schedule from 'node-schedule';
 import { Account } from './models/Account';
@@ -11,8 +11,70 @@ import express from 'express';
 import cors from 'cors';
 import { setWSClients } from './utils/logUtils';
 import { Server as WebSocketServer, WebSocket } from 'ws';
+import { timePastInMinutes } from './utils/dateUtils';
 
-const config = JSON.parse(readFileSync('./config.json', 'utf-8'));
+const app = express();
+app.use(cors());
+
+let config : any;
+let accounts: Account[] = [];
+
+function createEmulator(emulatorData: any): Emulator | undefined {
+    switch(emulatorData.type) {
+        case "Ld":
+            const ldEmulator = new LdPlayerEmulator(
+                emulatorData.emulatorName, 
+                emulatorData.deviceNames, 
+                emulatorData.installPath, 
+                emulatorData.startupCommand,
+                emulatorData.addStartRobotmonScript,
+                emulatorData.startupGravity,
+                emulatorData.reapplyGravityEveryMinutes
+            );
+            return ldEmulator;
+        case "Mumu":
+            const mumuEmulator = new MumuPlayerEmulator(
+                emulatorData.emulatorId, 
+                emulatorData.deviceNames, 
+                emulatorData.emulatorName, 
+                emulatorData.installPath, 
+                emulatorData.startupCommand,
+                emulatorData.addStartRobotmonScript,
+                emulatorData.startupGravity,
+                emulatorData.reapplyGravityEveryMinutes
+            );
+            return mumuEmulator;
+        default:
+            logError("Unknown emulator type.");
+            return undefined;
+    }
+}
+
+function loadConfig() {
+    config = JSON.parse(readFileSync('./config.json', 'utf-8'));
+
+    accounts = [];
+
+    for (let accountData of config.accounts) {
+        let emulator = createEmulator(accountData.emulator);
+        let account = new Account(
+            accountData.account, 
+            accountData.discordUserId, 
+            emulator, 
+            accountData.deathThreshold,
+            accountData.maxGameRestarts,
+            accountData.maxEmulatorRestarts
+        );
+        
+        // Set up the status update callback
+        account.onStatusUpdate = pushAccountStatus;
+        
+        accounts.push(account);
+    }
+}
+
+loadConfig();
+
 const port = config.serverPort ? config.serverPort : 3000;
 
 interface AccountCommand {
@@ -32,15 +94,11 @@ const accountCommands: Record<string, AccountCommand> = {
     'restoreEmulator': { shortNames: ['ne'], allowAll: true, action: function(account: Account) { account.restoreEmulator(); }},
     'togglePause': { shortNames: ['tp'], action: function(account: Account) { account.togglePause(); }},
     'startService': { shortNames: ['ss'], action: function(account: Account) { account.emulator?.startServiceForAllDevices(); }},
-    'runStartup': { shortNames: ['rs'], action: function(account: Account) { account.runStartupCommand(); }},
-    'changeGravity': { 
-        shortNames: ['cg'], 
-        action: function(account: Account, params?: any) {
-            if (params && account.emulator) {
-                account.emulator.changeGravity(params);
-            }
+    'changeGravity': { shortNames: ['cg'], action: function(account: Account, params?: any) {
+        if (params && account.emulator) {
+            account.emulator.changeGravity(params);
         }
-    },
+    }},
 };
 
 async function runAccountCommand(command: string, accountName: string, params?: any) {
@@ -72,9 +130,6 @@ async function runAccountCommand(command: string, accountName: string, params?: 
 
     commandObj.action(account, params);
 }
-
-const app = express();
-app.use(cors());
 
 // Add root route handler for account parameter
 app.get('/', (req, res) => {
@@ -117,7 +172,7 @@ app.get('/', (req, res) => {
             account.emulator!.startGameBeginTime = undefined;
             account.gameRestartAttempts = 0;
             logMessage = `Started game for ${account.accountName} successfully.`;
-            account.runStartupCommand();
+            account.applyStartupGravity();
         }
 
         if (account.isDead()) {
@@ -158,6 +213,23 @@ const server = app.listen(port, async () => {
     setWSClients(clients);
 });
 
+function pushAccountsData(ws: WebSocket) {
+    // Send current account data when client connects
+    const accountsData = accounts.map(account => ({
+        name: account.accountName,
+        emulator: account.emulator?.emulatorName || "None",
+        status: account.status,
+        lastUpdate: account.lastUpdate,
+        paused: account.paused,
+        startupGravity: account.emulator?.startupGravity
+    }));
+    
+    ws.send(JSON.stringify({
+        type: 'accounts',
+        data: accountsData
+    }));
+}
+
 const wss = new WebSocketServer({ server });
 
 // Rest of the WebSocket code remains the same
@@ -172,20 +244,7 @@ wss.on('connection', (ws) => {
         data: inMemoryLogs
     }));
 
-    // Send current account data when client connects
-    const accountsData = accounts.map(account => ({
-        name: account.accountName,
-        emulator: account.emulator?.emulatorName || "None",
-        status: account.status,
-        lastUpdate: account.lastUpdate,
-        paused: account.paused,
-        defaultGravity: account.emulator?.defaultGravity
-    }));
-    
-    ws.send(JSON.stringify({
-        type: 'accounts',
-        data: accountsData
-    }));
+    pushAccountsData(ws);
 
     ws.on('close', () => {
         clients.delete(ws);
@@ -194,41 +253,24 @@ wss.on('connection', (ws) => {
     ws.on('message', (message) => {
         try {
             const data = JSON.parse(message.toString());
+            
             if (data.type === 'command') {
-                const { command, accountName, params } = data.data;
-                runAccountCommand(command, accountName, params);
+                const commandData = data.data;
+                
+                // Check if it's a server command
+                if (serverCommands[commandData.command]) {
+                    serverCommands[commandData.command](commandData.params);
+                    return;
+                }
+                
+                // Existing account command handling
+                runAccountCommand(commandData.command, commandData.accountName, commandData.params);
             }
         } catch (error) {
-            console.error('Error processing WebSocket message:', error);
+            logError(`Error processing message: ${error}`);
         }
     });
 });
-
-let accounts: Account[] = [];
-
-function createEmulator(emulatorData: any): Emulator | undefined {
-    switch(emulatorData.type) {
-        case "Ld":
-            return new LdPlayerEmulator(
-                emulatorData.emulatorName, 
-                emulatorData.deviceNames, 
-                emulatorData.installPath, 
-                emulatorData.startupCommand, 
-                emulatorData.addStartRobotmonScript
-            );
-        case "Mumu":
-            return new MumuPlayerEmulator(
-                emulatorData.emulatoreId, 
-                emulatorData.deviceNames, 
-                emulatorData.emulatorName, 
-                emulatorData.installPath, 
-                emulatorData.startupCommand, 
-                emulatorData.addStartRobotmonScript);
-        default:
-            logError("Unknown emulator type.");
-            return undefined;
-    }
-}
 
 function pushAccountStatus(account: Account) {
     const accountData = {
@@ -237,7 +279,7 @@ function pushAccountStatus(account: Account) {
         status: account.status,
         lastUpdate: account.lastUpdate,
         paused: account.paused,
-        defaultGravity: account.emulator?.defaultGravity
+        startupGravity: account.emulator?.startupGravity
     };
 
     const payload = JSON.stringify({
@@ -250,23 +292,6 @@ function pushAccountStatus(account: Account) {
             client.send(payload);
         }
     });
-}
-
-for (let accountData of config.accounts) {
-    let emulator = createEmulator(accountData.emulator);
-    let account = new Account(
-        accountData.account, 
-        accountData.discordUserId, 
-        emulator, 
-        accountData.deathThreshold,
-        accountData.maxGameRestarts,
-        accountData.maxEmulatorRestarts
-    );
-    
-    // Set up the status update callback
-    account.onStatusUpdate = pushAccountStatus;
-    
-    accounts.push(account);
 }
 
 //discord server
@@ -346,7 +371,11 @@ function startScheduleJob() {
                     let secondsSpent = Math.floor((new Date().getTime() - account.emulator!.startEmulatorBeginTime!.getTime()) / 1000);
                     logError(`Already spent ${secondsSpent} seconds on starting emulator for ${account.accountName}, retrying...`);
                     account.restartEmulator();
-                } else if (account.isStartingGame()) {
+
+                    return;
+                }
+                
+                if (account.isStartingGame()) {
                     if (!account.startGameFailed()) {
                         return;
                     }
@@ -361,23 +390,39 @@ function startScheduleJob() {
                     let secondsSpent = Math.floor((new Date().getTime() - account.emulator!.startGameBeginTime!.getTime()) / 1000);
                     logError(`Already spent ${secondsSpent} seconds on starting game for ${account.accountName}, retrying...`);
                     account.restartGame();
-                } else if (account.isDead() && !account.notifiedDeath) {
+
+                    return;
+                }
+
+                if (account.isDead()) {
+                    if (account.notifiedDeath) {
+                        return;
+                    }
+                    
                     if (account.emulator) {
                         const message = `${account.accountName} lost connection, trying to restart game.`;
                         logError(message);
                         account.restartGame();
-                    } else {
-                        const errorMessage = `${account.accountName} lost connection, last alive: ${moment(account.lastAlive).format('HH:mm:ss')}`;
-                        logError(errorMessage);
-                        if (account.discordUserId) {
-                            try {
-                                client.users.cache.get(account.discordUserId)!.send(errorMessage);
-                            } catch (error) {
-                                logError(`Encountered error when notifying discord user ${account.discordUserId}`);
-                            }
+                        return;
+                    }
+                    
+                    const errorMessage = `${account.accountName} lost connection, last alive: ${moment(account.lastAlive).format('HH:mm:ss')}`;
+                    logError(errorMessage);
+                    if (account.discordUserId) {
+                        try {
+                            client.users.cache.get(account.discordUserId)!.send(errorMessage);
+                        } catch (error) {
+                            logError(`Encountered error when notifying discord user ${account.discordUserId}`);
                         }
-                        account.notifiedDeath = true;
-                        account.updateStatus("Offline");
+                    }
+                    account.notifiedDeath = true;
+                    account.updateStatus("Offline");
+                    return;
+                }
+
+                if (account.status === "Online" && account.emulator && account.emulator.reapplyGravityEveryMinutes) {
+                    if (!account.emulator.lastAppliedGravity || timePastInMinutes(account.emulator.lastAppliedGravity) >= account.emulator.reapplyGravityEveryMinutes) {
+                        account.applyStartupGravity();
                     }
                 }
             }
@@ -387,3 +432,55 @@ function startScheduleJob() {
     });
     return job;
 }
+
+// Add these new server commands
+const serverCommands: Record<string, (params?: any) => void> = {
+    'getServerConfig': async () => {
+        try {
+            const configData = readFileSync('./config.json', 'utf-8');
+            const config = JSON.parse(configData);
+            
+            let payload = JSON.stringify({
+                type: 'serverConfigData',
+                data: JSON.stringify(config, null, 2) // Pretty print JSON
+            });
+
+            // Send the config data back through websocket
+            clients.forEach(client => {
+                if (client.readyState === WebSocket.OPEN) {
+                    client.send(payload);
+                }
+            });
+        } catch (error) {
+            logError(`Error reading server config: ${error}`);
+        }
+    },
+    'updateServerConfig': async (params?: any) => {
+        if (!params?.config) {
+            logError('No config data provided for server update');
+            return;
+        }
+
+        try {
+            // Parse the new config to validate JSON
+            const newConfig = JSON.parse(params.config);
+            
+            // Write the updated config back to file
+            writeFileSync('./config.json', JSON.stringify(newConfig, null, 2));
+            
+            log('Updated server configuration.');
+
+            loadConfig();
+
+            log('Reloaded config.');
+            
+            clients.forEach(client => {
+                if (client.readyState === WebSocket.OPEN) {
+                    pushAccountsData(client);
+                }
+            });
+        } catch (error) {
+            logError(`Error updating server config: ${error}`);
+        }
+    }
+};

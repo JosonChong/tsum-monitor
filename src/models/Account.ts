@@ -28,7 +28,7 @@ export class Account {
 
     maxGameRestarts: number = 3;
 
-    maxEmulatorRestarts: number = 3;
+    maxEmulatorRestarts: number = 5;
 
     constructor(accountName: string, discordUserId?: string, emulator?: Emulator, deathThreshold?: number, maxGameRestarts?: number, maxEmulatorRestarts?: number) {
         this.accountName = accountName;
@@ -156,12 +156,13 @@ export class Account {
         await this.emulator.startGame();
     }
 
-    async runStartupCommand() {
-        if (!this.emulator || !this.emulator.startupCommand) {
+    async applyStartupGravity() {
+        if (!this.emulator || !this.emulator.startupGravity) {
             return;
         }
 
-        await this.emulator.runCommand(this.emulator.startupCommand, true);
+        await this.emulator.changeGravity(this.emulator.startupGravity);
+        this.emulator.lastAppliedGravity = new Date();
     }
 
     async killEmulator() {

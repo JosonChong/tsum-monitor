@@ -11,3 +11,4 @@ config.json
 *.exe
 dist
 build
+!assets/windowMode.exe
